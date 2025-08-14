@@ -3,124 +3,171 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>役職係数割り勘ツール v3（モバイル対応・複数先払い・長押し並べ替え）</title>
+<title>PayRanker｜役職係数で公平に割り勘</title>
 <style>
   :root{
     --gap:16px; --radius:14px; --border:#e5e7eb; --muted:#6b7280; --bg:#fff;
     --accent:#16a34a; --danger:#ef4444; --handle:#94a3b8;
+    --control-h:40px;
     font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP",sans-serif;
   }
-  html,body{background:#f7f7f7} body{margin:16px}
-  h1{margin:0 0 12px; font-size:20px}
-  .wrap{display:grid; gap:var(--gap); grid-template-columns:1.1fr 0.9fr; align-items:start}
+  html,body{background:#f7f7f7}
+  body{margin:16px}
+  /* レイアウト */
+  .wrap{max-width:1200px; margin:0 auto; display:grid; gap:var(--gap); grid-template-columns:1.1fr 0.9fr; align-items:start}
   .card{border:1px solid var(--border); border-radius:var(--radius); padding:16px; background:var(--bg)}
   .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
-  label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
-  input,select,button{font:inherit}
+  input,select,button{font:inherit; height:var(--control-h); box-sizing:border-box}
+  input[type="number"]{text-align:right}
   table{width:100%; border-collapse:collapse}
   th,td{border-bottom:1px solid #f1f5f9; padding:8px; text-align:left; vertical-align:middle}
-  th{background:#fafafa; font-weight:600}
+  th{background:#fafafa; font-weight:600; white-space:nowrap}
   .right{text-align:right} .mono{font-variant-numeric:tabular-nums}
-  .btn{padding:10px 12px; border:1px solid #d1d5db; border-radius:999px; background:#fff; cursor:pointer}
+  .btn{padding:0 14px; border:1px solid #d1d5db; border-radius:999px; background:#fff; cursor:pointer; white-space:nowrap; line-height:1}
   .btn.primary{background:var(--accent); color:#fff; border-color:#0d8f3c}
   .btn.warn{background:var(--danger); color:#fff; border-color:#dc2626}
   .muted{color:var(--muted); font-size:12px}
   .table-wrap{width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch}
-  /* 並べ替え */
-  .handle{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px;
+  /* 列幅（見出しが2行にならないよう調整） */
+  #payersTable col.name { width: 160px; }
+  #payersTable col.amount { width: 120px; }
+  #payersTable col.role { width: 180px; }
+  #payersTable col.included { width: 160px; }
+  #payersTable col.del { width: 90px; }
+  #rolesTable  col.r-name { width:auto; }
+  #rolesTable  col.r-coef { width: 100px; }
+  #rolesTable  col.r-count{ width: 110px; }
+  #rolesTable  col.r-del  { width: 90px; }
+  #rolesTable  col.r-sort { width: 64px; }
+  /* 並べ替えハンドル（右端） */
+  .handle{display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px;
     border-radius:6px; border:1px solid #cbd5e1; background:#f1f5f9; color:var(--handle); cursor:grab}
   .dragging{opacity:.6} .drop-target{outline:2px dashed #94a3b8; outline-offset:-6px}
-  /* フィールド（インラインラベル） */
-  .field{display:flex; align-items:center; gap:8px}
-  .f-label{color:#111; font-size:14px; min-width:88px; text-align:right}
-  .unit{color:var(--muted); font-size:12px}
-  .field input[type="number"], .field input[type="text"], .field select { width:200px; max-width:100% }
-  /* actions */
-  .actions-card{grid-column:1 / -1}
-  @media (max-width:900px){
+  /* 入力サイズ（係数=小数1桁 / 人数=最大3桁） */
+  .coef-input{ width:6ch; }
+  .count-input{ width:5ch; }
+  .small-chip{ display:inline-flex; align-items:center; height:24px; padding:0 8px; border-radius:999px; background:#f1f5f9; color:#6b7280; font-size:12px }
+  /* 削除ボタンが2行にならないように */
+  .btn.delete { white-space:nowrap; }
+  /* スマホ最適化 */
+  @media (max-width: 900px){
     body{margin:12px}
     .wrap{grid-template-columns:1fr}
     input,select,button{font-size:16px} /* iOS ズーム防止 */
     .btn{min-height:44px; width:100%}
-    .f-label{text-align:left; min-width:96px}
   }
 </style>
 </head>
 <body>
-<h1>役職係数でスマート割り勘 v3（複数先払い／係数降順／長押し並べ替え）</h1>
+  <!-- ヘッダー（サービス名＋説明） -->
+  <section class="card" style="max-width:1200px; margin:0 auto 12px;">
+    <h1 style="margin:0 0 6px; font-size:22px;">PayRanker</h1>
+    <p style="margin:0 0 6px; color:#374151;">役職に応じた係数で、みんなの支払いをスマートに按分する<strong>計算補助ツール</strong>です。</p>
+    <p class="muted" style="margin:0;">
+      ※本サイトは計算結果の<strong>参考</strong>を提供します。最終的な金額は参加者間でご確認ください。<br>
+      ※<strong>個人情報（氏名・メール・電話等）は入力しないでください</strong>。ニックネームなどを推奨します。
+    </p>
+  </section>
 
-<div class="wrap">
-  <!-- 左：設定 -->
-  <section class="card" id="settingsCard">
-    <div class="row" style="justify-content:space-between;">
-      <div class="field" style="min-width:280px">
-        <span class="f-label">合計金額</span>
-        <input id="total" type="number" min="0" step="1" placeholder="例: 48500">
-        <span class="unit">円・税込</span>
+  <div class="wrap">
+    <!-- 左：設定 -->
+    <section class="card" id="settingsCard">
+      <!-- 合計金額 -->
+      <div class="row" style="justify-content:space-between;">
+        <div class="row" style="min-width:280px">
+          <label class="muted" for="total" style="margin:0;">合計金額</label>
+          <input id="total" type="number" min="0" step="1" placeholder="例: 48500" style="width:220px;">
+          <span class="muted">円・税込</span>
+        </div>
       </div>
-    </div>
 
-    <div style="margin-top:10px">
-      <label>先払い（複数可）</label>
-      <div class="table-wrap">
-        <table id="payersTable" aria-label="先払いテーブル">
-          <thead><tr><th>名前</th><th class="right">金額（円）</th><th>役職（人数に含める場合）</th><th class="right">人数に含める</th><th></th></tr></thead>
-          <tbody id="payersBody"></tbody>
+      <!-- 先払い -->
+      <div style="margin-top:10px">
+        <label class="muted">先払い（複数可）</label>
+        <div class="table-wrap">
+          <table id="payersTable" aria-label="先払いテーブル">
+            <colgroup>
+              <col class="name"><col class="amount"><col class="role"><col class="included"><col class="del">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>名前</th>
+                <th class="right">金額（円）</th>
+                <th>役職（支払人数に含める場合）</th>
+                <th class="right">支払人数に含める</th>
+                <th class="right">削除</th>
+              </tr>
+            </thead>
+            <tbody id="payersBody"></tbody>
+          </table>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <input id="newPayerName" placeholder="例：Aさん" style="width:160px;">
+          <input id="newPayerAmount" type="number" min="0" step="1" placeholder="0" style="width:120px;">
+          <span class="muted">円</span>
+          <select id="newPayerRole" class="role-options" style="min-width:160px;"></select>
+          <label class="row" style="align-items:center"><input id="newPayerIncluded" type="checkbox" style="width:auto;"><span class="muted">支払人数に含める</span></label>
+          <button class="btn" id="addPayer" style="width:auto;">先払いを追加</button>
+        </div>
+      </div>
+
+      <!-- 役職テーブル -->
+      <div style="margin-top:16px">
+        <label class="muted">役職ごとの係数（人数編集可）</label>
+        <div class="table-wrap">
+          <table id="rolesTable" aria-label="役職係数テーブル">
+            <colgroup>
+              <col class="r-name"><col class="r-coef"><col class="r-count"><col class="r-del"><col class="r-sort">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>役職名</th>
+                <th class="right">係数</th>
+                <th class="right">人数</th>
+                <th class="right">削除</th>
+                <th class="right">並び</th>
+              </tr>
+            </thead>
+            <tbody id="rolesBody"></tbody>
+          </table>
+        </div>
+
+        <div class="row" style="margin-top:8px;">
+          <input id="newRoleName" placeholder="例：取締役" style="width:160px;">
+          <input id="newRoleCoef" class="coef-input" type="number" step="0.1" min="0" placeholder="2.0" inputmode="decimal">
+          <input id="newRoleCount" class="count-input" type="number" step="1" min="0" max="999" placeholder="0" inputmode="numeric">
+          <span class="muted">人</span>
+          <button class="btn" id="addRole" style="width:auto;">役職を追加</button>
+          <button class="btn warn" id="resetCounts" style="width:auto;">人数を全て0に</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 中央：操作 -->
+    <section class="card actions-card" style="grid-column:1 / -1;">
+      <div class="row" style="gap:10px">
+        <button class="btn primary" id="calcTop">計算する</button>
+        <button class="btn" id="copyTop">結果をコピー</button>
+        <button class="btn" id="csvTop">CSVダウンロード</button>
+      </div>
+    </section>
+
+    <!-- 右：結果 -->
+    <section class="card" id="resultCard">
+      <strong>計算結果</strong>
+      <div class="table-wrap" style="margin-top:8px">
+        <table id="resultTable">
+          <thead><tr><th>役職</th><th class="right">係数</th><th class="right">人数</th><th class="right">1人あたり（円）</th><th class="right">合計（円）</th></tr></thead>
+          <tbody id="resultBody"></tbody>
+          <tfoot><tr><td colspan="4" class="right">合計</td><td class="right mono" id="sumCell">0</td></tr></tfoot>
         </table>
       </div>
-      <div class="row" style="margin-top:8px;">
-        <div class="field"><span class="f-label">名前</span><input id="newPayerName" placeholder="例：Aさん"></div>
-        <div class="field"><span class="f-label">金額</span><input id="newPayerAmount" type="number" min="0" step="1" placeholder="0"><span class="unit">円</span></div>
-        <div class="field"><span class="f-label">役職</span><select id="newPayerRole" class="role-options" style="min-width:160px"></select></div>
-        <label class="field" style="align-items:center"><input id="newPayerIncluded" type="checkbox"><span class="unit">人数に含める</span></label>
-        <button class="btn" id="addPayer">先払いを追加</button>
-      </div>
-    </div>
-
-    <div style="margin-top:16px">
-      <label>役職ごとの係数（長押しドラッグで並べ替え／人数編集可）</label>
-      <div class="table-wrap">
-        <table id="rolesTable" aria-label="役職係数テーブル">
-          <thead><tr><th>並び</th><th>役職名</th><th class="right">係数</th><th class="right">人数</th><th></th></tr></thead>
-          <tbody id="rolesBody"></tbody>
-        </table>
-      </div>
-      <div class="row" style="margin-top:8px;">
-        <div class="field"><span class="f-label">役職名</span><input id="newRoleName" placeholder="例：取締役"></div>
-        <div class="field"><span class="f-label">係数</span><input id="newRoleCoef" type="number" step="0.1" min="0" placeholder="2.0"></div>
-        <div class="field"><span class="f-label">人数</span><input id="newRoleCount" type="number" step="1" min="0" placeholder="0"><span class="unit">人</span></div>
-        <button class="btn" id="addRole">役職を追加</button>
-        <button class="btn warn" id="resetCounts">人数を全て0に</button>
-      </div>
-      <p class="muted">ヒント：行左端の「≡」を<strong>長押し→ドラッグ</strong>で並べ替えできます。</p>
-    </div>
-  </section>
-
-  <!-- 中央：操作 -->
-  <section class="card actions-card">
-    <div class="row" style="gap:10px">
-      <button class="btn primary" id="calcTop">計算する</button>
-      <button class="btn" id="copyTop">結果をコピー</button>
-      <button class="btn" id="csvTop">CSVダウンロード</button>
-    </div>
-  </section>
-
-  <!-- 右：結果 -->
-  <section class="card" id="resultCard">
-    <strong>計算結果</strong>
-    <div class="table-wrap" style="margin-top:8px">
-      <table id="resultTable">
-        <thead><tr><th>役職</th><th class="right">係数</th><th class="right">人数</th><th class="right">1人あたり（円）</th><th class="right">合計（円）</th></tr></thead>
-        <tbody id="resultBody"></tbody>
-        <tfoot><tr><td colspan="4" class="right">合計</td><td class="right mono" id="sumCell">0</td></tr></tfoot>
-      </table>
-    </div>
-    <div id="payerSummary" class="muted" style="margin-top:8px"></div>
-  </section>
-</div>
+      <div id="payerSummary" class="muted" style="margin-top:8px"></div>
+    </section>
+  </div>
 
 <script>
-/* ====== 初期データ ====== */
+/* ====== 初期データ（index_v15ベース） ====== */
 const DEFAULT_ROLES = [
   { name: "役員", coef: 2.0, count: 0 },
   { name: "部長", coef: 1.5, count: 0 },
@@ -129,7 +176,7 @@ const DEFAULT_ROLES = [
   { name: "主任", coef: 1.1, count: 0 },
   { name: "一般", coef: 1.0, count: 0 },
 ];
-let roles = DEFAULT_ROLES.map(r => ({...r})); // 深いコピーで保持（初期6役職を必ず表示）
+let roles = DEFAULT_ROLES.map(r => ({...r}));
 let payers = []; // {name, amount, role, included}
 
 /* ====== DOM ====== */
@@ -161,10 +208,10 @@ function renderPayers(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input value="${p.name}" data-name style="width:100%"></td>
-      <td class="right"><input type="number" data-amount min="0" step="1" value="${p.amount}" style="width:120px; text-align:right"></td>
+      <td class="right"><input type="number" data-amount min="0" step="1" value="${p.amount}" style="width:120px;"></td>
       <td><select class="role-options" data-role></select></td>
-      <td class="right" style="text-align:center"><input type="checkbox" data-included ${p.included?'checked':''}></td>
-      <td class="right"><button class="btn" data-del>削除</button></td>
+      <td class="right" style="text-align:center"><input type="checkbox" data-included style="width:auto" ${p.included?'checked':''}></td>
+      <td class="right"><button class="btn delete" data-del>削除</button></td>
     `;
     payersBody.appendChild(tr);
     const roleSel = tr.querySelector('[data-role]'); renderRoleOptions(roleSel); roleSel.value = p.role || '';
@@ -177,7 +224,7 @@ function renderPayers(){
   });
 }
 
-/* ====== 役職テーブル（長押しドラッグ） ====== */
+/* ====== 役職テーブル（並べ替えハンドルを右端へ） ====== */
 let dragState = { active:false, fromIndex:-1, overIndex:-1, pressTimer:null };
 function renderRolesTable(){
   rolesBody.innerHTML = '';
@@ -189,16 +236,16 @@ function renderRolesTable(){
     const tr = document.createElement('tr');
     tr.dataset.index = i;
     tr.innerHTML = `
-      <td style="width:56px"><div class="handle" title="長押しでドラッグ">≡</div></td>
       <td><input value="${r.name}" data-role-name style="width:100%"></td>
-      <td class="right"><input type="number" step="0.1" min="0" value="${r.coef}" data-role-coef style="width:100px; text-align:right"></td>
+      <td class="right"><input type="number" step="0.1" min="0" value="${r.coef.toFixed(1)}" data-role-coef class="coef-input"></td>
       <td class="right">
         <div class="row" style="justify-content:flex-end; gap:6px;">
-          <input type="number" step="1" min="0" value="${effective}" data-role-count style="width:100px; text-align:right">
-          ${extra>0 ? `<span class="muted">+${extra}</span>` : ``}
+          <input type="number" step="1" min="0" max="999" value="${effective}" data-role-count class="count-input">
+          ${extra>0 ? `<span class="small-chip">+${extra}</span>` : ``}
         </div>
       </td>
-      <td class="right"><button class="btn" data-del>削除</button></td>
+      <td class="right"><button class="btn delete" data-del>削除</button></td>
+      <td class="right" style="width:56px"><div class="handle" title="長押しでドラッグ">≡</div></td>
     `;
     rolesBody.appendChild(tr);
 
@@ -207,15 +254,17 @@ function renderRolesTable(){
       renderRoleOptions(); renderRolesTable();
     });
     tr.querySelector('[data-role-coef]').addEventListener('change', e=>{
-      const v = Math.max(0, Number(e.target.value)||0); roles[i].coef = v;
+      let v = Number(e.target.value); if (!isFinite(v) || v < 0) v = 0;
+      roles[i].coef = Math.round(v*10)/10; // 小数1位
+      e.target.value = roles[i].coef.toFixed(1);
     });
     tr.querySelector('[data-role-count]').addEventListener('change', e=>{
-      const entered = Math.max(0, Math.floor(Number(e.target.value)||0));
+      let entered = Math.max(0, Math.floor(Number(e.target.value)||0)); if (entered > 999) entered = 999;
       roles[i].count = Math.max(0, entered - extra); renderRolesTable();
     });
     tr.querySelector('[data-del]').addEventListener('click', ()=>{ roles.splice(i,1); renderRolesTable(); renderRoleOptions(); });
 
-    // 長押し→ドラッグ
+    // 長押し→ドラッグ（右端ハンドル）
     const handle = tr.querySelector('.handle');
     const startDrag = ()=>{
       dragState.active = true; dragState.fromIndex = i; dragState.overIndex = i;
@@ -238,14 +287,14 @@ function endDrag(){
   document.removeEventListener('pointermove', onDragMove);
   const rows = Array.from(rolesBody.querySelectorAll('tr')); rows.forEach(r=>{ r.classList.remove('drop-target'); r.classList.remove('dragging'); });
   if (dragState.active){
-    const {fromIndex:from,toIndex,to=dragState.overIndex} = dragState;
+    const from = dragState.fromIndex, to = dragState.overIndex;
     if (from!==-1 && to!==-1 && from!==to){ const item = roles.splice(from,1)[0]; roles.splice(to,0,item); }
   }
   dragState = { active:false, fromIndex:-1, overIndex:-1, pressTimer:null };
   renderRolesTable(); renderRoleOptions();
 }
 
-/* ====== 先払いの「人数に含める」集計 ====== */
+/* ====== 先払いの「支払人数に含める」集計 ====== */
 function getIncludedCountsByRole(){
   const m = new Map();
   payers.forEach(p=>{ if (p.included && p.role) m.set(p.role, (m.get(p.role)||0)+1) });
@@ -283,7 +332,7 @@ function compute(){
     const o = byRole.get(r.name) || {name:r.name,coef:r.coef,count:0,sum:0,pays:[]};
     sum += o.sum; const per = o.count>0 ? Math.round(o.sum/o.count) : Math.round(unit*o.coef);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${o.name}</td><td class="right mono">${Number(o.coef).toFixed(2)}</td><td class="right mono">${o.count}</td><td class="right mono">${per.toLocaleString('ja-JP')}</td><td class="right mono">${o.sum.toLocaleString('ja-JP')}</td>`;
+    tr.innerHTML = `<td>${o.name}</td><td class="right mono">${Number(o.coef).toFixed(1)}</td><td class="right mono">${o.count}</td><td class="right mono">${per.toLocaleString('ja-JP')}</td><td class="right mono">${o.sum.toLocaleString('ja-JP')}</td>`;
     resultBody.appendChild(tr);
   });
   sumCell.textContent = sum.toLocaleString('ja-JP');
@@ -308,7 +357,7 @@ function copyResult(){
   });
   const sum = document.getElementById('sumCell').textContent.replace(/,/g,''); rows.push(['合計','','','',sum]);
   const payerText = document.getElementById('payerSummary').innerText || '';
-  const text = rows.map(r=>r.join('\\t')).join('\\n') + (payerText? '\\n'+payerText:'');
+  const text = rows.map(r=>r.join('\t')).join('\n') + (payerText? '\n'+payerText:'');
   navigator.clipboard.writeText(text).then(()=>alert('結果をコピーしました（タブ区切り）。')).catch(()=>{
     const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('結果をコピーしました。');
   });
@@ -321,9 +370,9 @@ function downloadCsv(){
   });
   if(rows.length===1){ alert('先に「計算する」を実行してください。'); return; }
   const sum = document.getElementById('sumCell').textContent.replace(/,/g,''); rows.push(['合計','','','',sum]);
-  const csv = rows.map(r=> r.map(v=>{const s=String(v??''); return /[",\\n]/.test(s)? '"'+s.replace(/"/g,'""')+'"' : s;}).join(',')).join('\\n');
+  const csv = rows.map(r=> r.map(v=>{const s=String(v??''); return /[",\n]/.test(s)? '"'+s.replace(/"/g,'""')+'"' : s;}).join(',')).join('\n');
   const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`warikan_roles_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`payranker_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
 }
 
 /* ====== 入出力イベント ====== */
@@ -339,8 +388,9 @@ document.getElementById('addPayer').addEventListener('click', ()=>{
 });
 function addRoleFromInputs(){
   const name=(document.getElementById('newRoleName').value||'').trim();
-  let coef=Number(String(document.getElementById('newRoleCoef').value).replace(',','.')); if(!isFinite(coef)||coef<=0) coef=1.0;
-  let count=Math.max(0, Math.floor(Number(document.getElementById('newRoleCount').value)||0));
+  let coef=Number(String(document.getElementById('newRoleCoef').value).replace(',','.')); if(!isFinite(coef)||coef<0) coef=0;
+  coef = Math.round(coef*10)/10;
+  let count=Math.max(0, Math.min(999, Math.floor(Number(document.getElementById('newRoleCount').value)||0)));
   if(!name){ alert('役職名を入力してください'); return; }
   roles.push({name,coef,count}); document.getElementById('newRoleName').value=''; document.getElementById('newRoleCoef').value=''; document.getElementById('newRoleCount').value='';
   renderRolesTable(); renderRoleOptions();
@@ -349,13 +399,14 @@ document.getElementById('addRole').addEventListener('click', addRoleFromInputs);
 ['newRoleName','newRoleCoef','newRoleCount'].forEach(id=>{
   document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addRoleFromInputs(); }});
 });
+
 document.getElementById('resetCounts').addEventListener('click', ()=>{ roles = roles.map(r=>({...r,count:0})); renderRolesTable(); });
 
 document.getElementById('calcTop').addEventListener('click', compute);
 document.getElementById('copyTop').addEventListener('click', copyResult);
 document.getElementById('csvTop').addEventListener('click', downloadCsv);
 
-/* ====== 初期描画（必ず6役職が出る） ====== */
+/* ====== 初期描画 ====== */
 function init(){
   renderRolesTable(); renderRoleOptions(); renderPayers();
 }
