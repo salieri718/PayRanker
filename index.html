@@ -10,47 +10,65 @@
     --accent:#16a34a; --danger:#ef4444; --handle:#94a3b8;
     --labelW: 120px;
     --chipW: 42px;
-    --miniInputW: 80px;
-    --delW: 64px;
+    --miniInputW: 82px;
+    --delW: 78px;
     --handleW: 44px;
+    --blockW: 960px;  /* 外枠カードの統一幅 */
+    --inputW: 480px;  /* 入力ボックスの統一幅 */
+    --stackW: 560px;  /* ボタン幅の統一 */
     font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP",sans-serif;
   }
   *,*::before,*::after{ box-sizing:border-box }
   html,body{ background:#f7f7f7 } body{ margin:16px }
-  h1{ margin:0 0 4px; font-size:22px }
-  .desc{ margin:0 0 12px; color:#374151; font-size:14px }
-  .note{ margin:8px 0 16px; color:#6b7280; font-size:12px }
-  .wrap{ display:grid; gap:var(--gap); grid-template-columns:1fr 1fr; align-items:start }
+  h1{ margin:0 auto 4px; font-size:22px; text-align:center; max-width:var(--blockW) }
+  .desc{ margin:0 auto 12px; color:#374151; font-size:14px; text-align:center; max-width:var(--blockW) }
+  .note{ margin:8px auto 16px; color:#6b7280; font-size:12px; text-align:center; max-width:var(--blockW) }
+  .wrap{ display:grid; gap:var(--gap); grid-template-columns:1fr; align-items:start; justify-content:center; max-width:var(--blockW); margin:0 auto }
   .card{ border:1px solid var(--border); border-radius:14px; padding:16px; background:#fff; width:100% }
-  .subpanel{ border:1px dashed #cbd5e1; border-radius:10px; padding:12px; background:#fff }
-  .subpanel + .subpanel{ margin-top:10px }
-  .section-title{ margin:0 0 8px; font-size:16px; font-weight:700 }
-  .section-sub{ margin:0 0 8px; font-size:14px; font-weight:600; color:#374151 }
-  .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap }
+  .subpanel{ border:1px solid #cbd5e1; border-radius:10px; padding:12px; background:#fff; margin:8px 0 12px; }
+  .card .subpanel:last-child{ margin-bottom:0 }
+  .panel-gap{ height:4px } /* ≈1mm の余白 */
+  .section-title{ margin:0 0 8px; font-size:16px; font-weight:700; text-align:left }
+  .section-sub{ margin:0 0 8px; font-size:14px; font-weight:600; color:#374151; text-align:left }
+  .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:flex-start }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center }
+  .btn-stack{ display:flex; flex-direction:column; gap:12px; align-items:center }
   .muted{ color:var(--muted); font-size:12px }
-  .btn{ padding:10px 12px; border:1px solid #d1d5db; border-radius:999px; background:#fff; cursor:pointer }
+  .btn{ padding:10px 12px; border:1px solid #d1d5db; border-radius:999px; background:#fff; cursor:pointer; min-height:44px }
   .btn.primary{ background:var(--accent); color:#fff; border-color:#0d8f3c }
-  .btn.warn{ background:var(--danger); color:#fff; border-color:#dc2626 }
+  .btn.warn{ background:#ef4444; color:#fff; border-color:#dc2626 }
+  .btn.stacked{ width:clamp(240px, 80%, var(--stackW)); }
   input,select,button{ font:inherit }
   .table-wrap{ width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch }
   table{ width:100%; border-collapse:collapse; table-layout:fixed }
   th,td{ border-bottom:1px solid #f1f5f9; padding:8px; text-align:left; vertical-align:middle }
-  th{ background:#fafafa; font-weight:600 }
+  th{ background:#fafafa; font-weight:600; text-align:left }
   .right{ text-align:right } .mono{ font-variant-numeric:tabular-nums }
-  /* 左カードのラベル揃え */
-  .kv .field{ display:flex; align-items:center; gap:8px; flex:1 1 auto }
-  .kv .f-label{ min-width:var(--labelW); text-align:right; color:#111; font-size:14px }
+  /* ラベル & 入力は左揃え */
+  .kv .field{ display:flex; align-items:center; gap:8px; flex:1 1 auto; justify-content:flex-start }
+  .kv .f-label{ min-width:var(--labelW); text-align:left; color:#111; font-size:14px }
   .unit{ color:var(--muted); font-size:12px }
-  .field input[type="number"], .field input[type="text"], .field select { width:220px; max-width:100% }
-  /* 並べ替え */
+  .field input[type="number"], .field input[type="text"], .field select { width:var(--inputW); max-width:100% }
+  /* 個別幅の統一（ご要望の入力を同幅に） */
+  #newPayerName, #newPayerAmount, #newPayerRole,
+  #newRoleName, #newRoleCoef { width: var(--inputW); max-width: 100%; }
+  /* 並べ替えハンドル */
   .handle{ display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px;
            border-radius:6px; border:1px solid #cbd5e1; background:#f1f5f9; color:#94a3b8; cursor:grab }
   .dragging{ opacity:.6 } .drop-target{ outline:2px dashed #94a3b8; outline-offset:-6px }
-  /* 中央の操作カードは全幅 */
-  .actions-card{ grid-column:1 / -1 }
-  .actions-card .subpanel .btn{ width:100% }
-
-  /* === スマホ最適化: 役職行カード（ハンドル右端） === */
+  /* ===== Desktop テーブル列幅（重なり防止） ===== */
+  @media (min-width: 701px){
+    .chip{ display:none }
+    #rolesTable col:nth-child(1){ width:auto; }   /* 役職名 */
+    #rolesTable col:nth-child(2){ width:140px; }  /* 係数 */
+    #rolesTable col:nth-child(3){ width:140px; }  /* 人数 */
+    #rolesTable col:nth-child(4){ width:96px; }   /* 削除 */
+    #rolesTable col:nth-child(5){ width:64px; }   /* 並び */
+    #rolesTable input.count{ width:100px !important; }
+    #rolesTable input.coef{ width:100px !important; }
+    #rolesTable .btn.del{ width:84px }
+  }
+  /* ===== モバイル：役職行カード（ハンドル右端） ===== */
   @media (max-width: 700px){
     #rolesTable thead{ display:none }
     #rolesTable tbody{ display:block }
@@ -68,10 +86,10 @@
       background:#fff;
       align-items:center;
     }
-    #rolesTable tbody tr.role-card td{ border:0; padding:0 }
+    #rolesTable tbody tr.role-card td{ border:0; padding:0; text-align:left }
     #rolesTable tbody tr.role-card td[data-area="name"]{ grid-area:name }
     #rolesTable tbody tr.role-card td[data-area="coef"]{ grid-area:coef }
-    #rolesTable tbody tr.role-card td[data-area="count"]{ grid-area:count }
+    #rolesTable tbody tr.role-card td[data-area="count"]{ grid-area:count; text-align:left }
     #rolesTable tbody tr.role-card td[data-area="del"]{ grid-area:del; text-align:right }
     #rolesTable tbody tr.role-card td[data-area="handle"]{ grid-area:handle; text-align:right }
     .mini{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; min-height:36px }
@@ -81,8 +99,7 @@
     .btn.del{ width:var(--delW); min-height:36px; padding:6px 10px; }
     .handle{ width:var(--handleW); height:var(--handleW) }
   }
-
-  /* === スマホ最適化: 先払い行カード === */
+  /* ===== モバイル：先払い行カード ===== */
   @media (max-width: 700px){
     #payersTable thead{ display:none }
     #payersTable tbody{ display:block }
@@ -102,24 +119,22 @@
       background:#fff;
       align-items:center;
     }
-    #payersTable tbody tr.payer-card td{ border:0; padding:0 }
+    #payersTable tbody tr.payer-card td{ border:0; padding:0; text-align:left }
     #payersTable tbody tr.payer-card td:nth-child(1){ grid-area:name }
     #payersTable tbody tr.payer-card td:nth-child(2){ grid-area:amount }
     #payersTable tbody tr.payer-card td:nth-child(3){ grid-area:role }
-    #payersTable tbody tr.payer-card td:nth-child(4){ grid-area:incl; text-align:left }
+    #payersTable tbody tr.payer-card td:nth-child(4){ grid-area:incl }
     #payersTable tbody tr.payer-card td:nth-child(5){ grid-area:del; text-align:right }
     #payersTable input[type="text"], #payersTable input[type="number"], #payersTable select{ width:100% }
     #payersTable input[type="number"]{ text-align:right }
     #payersTable .btn{ width:var(--delW); min-height:36px; padding:6px 10px }
   }
-
-  /* スマホ全般 */
+  /* モバイル全般 */
   @media (max-width: 900px){
     body{ margin:12px }
     .wrap{ grid-template-columns:1fr }
     input,select,button{ font-size:16px }
     .btn{ min-height:44px }
-    .kv .f-label{ text-align:left }
   }
 </style>
 </head>
@@ -133,7 +148,7 @@
   <section class="card kv" id="settingsCard">
     <div class="section-title">会計金額</div>
     <div class="subpanel">
-      <div class="row" style="justify-content:space-between;">
+      <div class="row">
         <div class="field" style="min-width:280px">
           <span class="f-label">合計金額</span>
           <input id="total" type="number" min="0" step="1" placeholder="例: 48500">
@@ -141,8 +156,9 @@
         </div>
       </div>
     </div>
+    <div class="panel-gap"></div>
 
-    <div class="section-title" style="margin-top:12px">先払い（複数可）</div>
+    <div class="section-title">先払い（複数可）</div>
     <div class="subpanel">
       <div class="row">
         <div class="field"><span class="f-label">名前</span><input id="newPayerName" placeholder="例：Aさん"></div>
@@ -151,51 +167,54 @@
         <div class="field"><span class="f-label">金額</span><input id="newPayerAmount" type="number" min="0" step="1" placeholder="0"><span class="unit">円</span></div>
       </div>
       <div class="row">
-        <div class="field"><span class="f-label">役職</span><select id="newPayerRole" class="role-options" style="min-width:160px"></select></div>
+        <div class="field"><span class="f-label">役職</span><select id="newPayerRole" class="role-options"></select></div>
       </div>
       <div class="row" style="align-items:center">
         <label class="field" style="align-items:center"><input id="newPayerIncluded" type="checkbox"><span class="unit">支払人数に含める</span></label>
       </div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn" id="addPayer" style="width:100%">先払いを追加</button>
+      <div class="btn-stack" style="margin-top:8px">
+        <button class="btn stacked" id="addPayer">先払いを追加</button>
       </div>
     </div>
+    <div class="panel-gap"></div>
 
-    <div class="section-sub" style="margin-top:10px">追加された先払い者情報</div>
+    <div class="section-sub">追加された先払い者情報</div>
     <div class="subpanel">
       <div class="table-wrap">
         <table id="payersTable" aria-label="先払いテーブル">
           <colgroup>
             <col style="width:auto;">
-            <col style="width:140px;">
             <col style="width:160px;">
-            <col style="width:140px;">
-            <col style="width:84px;">
+            <col style="width:160px;">
+            <col style="width:180px;">
+            <col style="width:96px;">
           </colgroup>
-          <thead><tr><th>名前</th><th class="right">金額（円）</th><th>役職（支払人数に含める場合）</th><th class="right">支払人数に含める</th><th></th></tr></thead>
+          <thead><tr><th>名前</th><th>金額（円）</th><th>役職</th><th>支払人数に含める</th><th></th></tr></thead>
           <tbody id="payersBody"></tbody>
         </table>
       </div>
     </div>
+    <div class="panel-gap"></div>
 
-    <div class="section-title" style="margin-top:12px">役職、係数設定</div>
+    <div class="section-title">役職、係数設定</div>
     <div class="subpanel">
       <div class="table-wrap">
         <table id="rolesTable" aria-label="役職係数テーブル">
           <colgroup>
-            <col style="width:auto;">  <!-- 役職名 -->
-            <col style="width:110px;"> <!-- 係数 -->
-            <col style="width:88px;">  <!-- 人数 -->
-            <col style="width:84px;">  <!-- 削除 -->
-            <col style="width:56px;">  <!-- 並び -->
+            <col style="width:auto;">
+            <col style="width:140px;">
+            <col style="width:140px;">
+            <col style="width:96px;">
+            <col style="width:64px;">
           </colgroup>
-          <thead><tr><th>役職名</th><th class="right">係数</th><th class="right">人数</th><th></th><th class="right">並び</th></tr></thead>
+          <thead><tr><th>役職名</th><th>係数</th><th>人数</th><th></th><th class="right">並び</th></tr></thead>
           <tbody id="rolesBody"></tbody>
         </table>
       </div>
     </div>
+    <div class="panel-gap"></div>
 
-    <div class="section-sub" style="margin-top:10px">役職カスタム追加</div>
+    <div class="section-sub">役職カスタム追加</div>
     <div class="subpanel">
       <div class="row">
         <div class="field"><span class="f-label">役職名</span><input id="newRoleName" placeholder="例：取締役"></div>
@@ -203,12 +222,9 @@
       <div class="row">
         <div class="field"><span class="f-label">係数</span><input id="newRoleCoef" type="number" step="0.1" min="0" placeholder="2.0"></div>
       </div>
-      <div class="row">
-        <div class="field"><span class="f-label">人数</span><input id="newRoleCount" type="number" step="1" min="0" placeholder="0"><span class="unit">人</span></div>
-      </div>
-      <div class="row" style="gap:8px">
-        <button class="btn" id="addRole" style="flex:1">役職を追加</button>
-        <button class="btn warn" id="resetCounts" style="flex:1">人数を全て0に</button>
+      <div class="btn-stack" style="gap:8px">
+        <button class="btn stacked" id="addRole">役職を追加</button>
+        <button class="btn warn stacked" id="resetCounts">人数を全て0に</button>
       </div>
     </div>
   </section>
@@ -217,10 +233,10 @@
   <section class="card actions-card">
     <div class="section-title">計算</div>
     <div class="subpanel">
-      <div class="row" style="gap:10px; flex-direction:column">
-        <button class="btn primary" id="calcTop">計算する</button>
-        <button class="btn" id="copyTop">結果をコピー</button>
-        <button class="btn" id="csvTop">CSVダウンロード</button>
+      <div class="btn-stack">
+        <button class="btn primary stacked" id="calcTop">計算する</button>
+        <button class="btn stacked" id="copyTop">結果をコピー</button>
+        <button class="btn stacked" id="csvTop">CSVダウンロード</button>
       </div>
     </div>
   </section>
@@ -234,12 +250,12 @@
         <table id="resultTable">
           <colgroup>
             <col style="width:auto;">
-            <col style="width:90px;">
-            <col style="width:90px;">
-            <col style="width:130px;">
-            <col style="width:130px;">
+            <col style="width:110px;">
+            <col style="width:110px;">
+            <col style="width:150px;">
+            <col style="width:150px;">
           </colgroup>
-          <thead><tr><th>役職</th><th class="right">係数</th><th class="right">人数</th><th class="right">1人あたり（円）</th><th class="right">合計（円）</th></tr></thead>
+          <thead><tr><th>役職</th><th>係数</th><th>人数</th><th class="right">1人あたり（円）</th><th class="right">合計（円）</th></tr></thead>
           <tbody id="resultBody"></tbody>
           <tfoot><tr><td colspan="4" class="right">合計</td><td class="right mono" id="sumCell">0</td></tr></tfoot>
         </table>
@@ -306,9 +322,9 @@ function renderPayers(){
     tr.className = 'payer-card';
     tr.innerHTML = `
       <td><input value="${p.name}" data-name style="width:100%"></td>
-      <td class="right"><input type="number" data-amount min="0" step="1" value="${p.amount}" style="width:140px; max-width:100%; text-align:right"></td>
+      <td><input type="number" data-amount min="0" step="1" value="${p.amount}" style="width:160px; max-width:100%; text-align:right"></td>
       <td><select class="role-options" data-role></select></td>
-      <td class="right" style="text-align:left"><label class="row" style="gap:6px; align-items:center"><input type="checkbox" data-included ${p.included?'checked':''}><span class="muted">支払人数に含める</span></label></td>
+      <td><label class="row" style="gap:6px; align-items:center"><input type="checkbox" data-included ${p.included?'checked':''}><span class="muted">支払人数に含める</span></label></td>
       <td class="right"><button class="btn" data-del>削除</button></td>
     `;
     payersBody.appendChild(tr);
@@ -336,8 +352,8 @@ function renderRolesTable(){
     tr.dataset.index = i;
     tr.innerHTML = `
       <td data-area="name"><input value="${r.name}" data-role-name style="width:100%"></td>
-      <td data-area="coef" class="right"><div class="mini"><span class="chip">係数</span><input class="coef" type="number" step="0.1" min="0" value="${r.coef}" data-role-coef></div></td>
-      <td data-area="count" class="right"><div class="mini" style="justify-content:flex-end;"><span class="chip">人数</span><input class="count" type="number" step="1" min="0" value="${effective}" data-role-count> ${extra>0 ? `<span class="extra">+${extra}</span>` : `<span class="extra"></span>`}</div></td>
+      <td data-area="coef"><div class="mini"><span class="chip">係数</span><input class="coef" type="number" step="0.1" min="0" value="${r.coef}" data-role-coef></div></td>
+      <td data-area="count"><div class="mini"><span class="chip">人数</span><input class="count" type="number" step="1" min="0" value="${effective}" data-role-count> ${extra>0 ? `<span class="extra">+${extra}</span>` : `<span class="extra"></span>`}</div></td>
       <td data-area="del" class="right"><button class="btn del" data-del>削除</button></td>
       <td data-area="handle" class="right"><div class="handle" title="長押しでドラッグ">≡</div></td>
     `;
@@ -424,7 +440,7 @@ function compute(){
     const o = byRole.get(r.name) || {name:r.name,coef:r.coef,count:0,sum:0,pays:[]};
     sum += o.sum; const per = o.count>0 ? Math.round(o.sum/o.count) : Math.round(unit*o.coef);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${o.name}</td><td class="right mono">${Number(o.coef).toFixed(2)}</td><td class="right mono">${o.count}</td><td class="right mono">${per.toLocaleString('ja-JP')}</td><td class="right mono">${o.sum.toLocaleString('ja-JP')}</td>`;
+    tr.innerHTML = `<td>${o.name}</td><td>${Number(o.coef).toFixed(2)}</td><td>${o.count}</td><td class="right mono">${per.toLocaleString('ja-JP')}</td><td class="right mono">${o.sum.toLocaleString('ja-JP')}</td>`;
     resultBody.appendChild(tr);
   });
   sumCell.textContent = sum.toLocaleString('ja-JP');
@@ -449,7 +465,7 @@ function copyResult(){
   });
   const sum = document.getElementById('sumCell').textContent.replace(/,/g,''); rows.push(['合計','','','',sum]);
   const payerText = document.getElementById('payerSummary').innerText || '';
-  const text = rows.map(r=>r.join('\t')).join('\n') + (payerText? '\n'+payerText:'');
+  const text = rows.map(r=>r.join('\t')).join('\n') + (payerText? '\\n'+payerText:'');
   navigator.clipboard.writeText(text).then(()=>alert('結果をコピーしました（タブ区切り）。')).catch(()=>{
     const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('結果をコピーしました。');
   });
@@ -462,7 +478,7 @@ function downloadCsv(){
   });
   if(rows.length===1){ alert('先に「計算する」を実行してください。'); return; }
   const sum = document.getElementById('sumCell').textContent.replace(/,/g,''); rows.push(['合計','','','',sum]);
-  const csv = rows.map(r=> r.map(v=>{const s=String(v??''); return /[",\n]/.test(s)? '"'+s.replace(/"/g,'""')+'"' : s;}).join(',')).join('\n');
+  const csv = rows.map(r=> r.map(v=>{const s=String(v??''); return /[",\\n]/.test(s)? '"'+s.replace(/"/g,'""')+'"' : s;}).join(',')).join('\\n');
   const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`warikan_roles_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
 }
@@ -480,14 +496,16 @@ document.getElementById('addPayer').addEventListener('click', ()=>{
 });
 function addRoleFromInputs(){
   const name=(document.getElementById('newRoleName').value||'').trim();
-  let coef=Number(String(document.getElementById('newRoleCoef').value).replace(',','.')); if(!isFinite(coef)||coef<=0) coef=1.0;
-  let count=Math.max(0, Math.floor(Number(document.getElementById('newRoleCount').value)||0));
+  let coef=Number(String(document.getElementById('newRoleCoef').value).replace(',','.'));
+  if(!isFinite(coef)||coef<=0) coef=1.0;
+  const count = 0; // 既定で0
   if(!name){ alert('役職名を入力してください'); return; }
-  roles.push({name,coef,count}); document.getElementById('newRoleName').value=''; document.getElementById('newRoleCoef').value=''; document.getElementById('newRoleCount').value='';
+  roles.push({name,coef,count});
+  document.getElementById('newRoleName').value=''; document.getElementById('newRoleCoef').value='';
   renderRolesTable(); renderRoleOptions();
 }
 document.getElementById('addRole').addEventListener('click', addRoleFromInputs);
-['newRoleName','newRoleCoef','newRoleCount'].forEach(id=>{
+['newRoleName','newRoleCoef'].forEach(id=>{
   document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addRoleFromInputs(); }});
 });
 document.getElementById('resetCounts').addEventListener('click', ()=>{ roles = roles.map(r=>({...r,count:0})); renderRolesTable(); });
