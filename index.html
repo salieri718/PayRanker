@@ -3,86 +3,94 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>役職係数割り勘ツール v3（モバイル対応・複数先払い・長押し並べ替え）</title>
+<title>役職係数割り勘ツール v3（モバイル最適 / 複数先払い / 長押し並べ替え）</title>
 <style>
   :root{
-    --delW: 64px; --handleW: 44px; --miniInputW: 78px;
     --gap:16px; --radius:14px; --border:#e5e7eb; --muted:#6b7280; --bg:#fff;
     --accent:#16a34a; --danger:#ef4444; --handle:#94a3b8;
+    --labelW: 120px;           /* 設定フォームのラベル列幅（自動で更新） */
+    --chipW: 42px;             /* ミニラベルの固定幅（係数/人数） */
+    --miniInputW: 80px;        /* 係数/人数の入力幅 */
+    --delW: 64px;              /* 削除ボタンの固定幅 */
+    --handleW: 44px;           /* 並べ替えハンドルの固定幅 */
     font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP",sans-serif;
   }
-  html,body{background:#f7f7f7} body{margin:16px}
-  *,*::before,*::after{box-sizing:border-box}
-  h1{margin:0 0 12px; font-size:20px}
-  .wrap{display:grid; gap:var(--gap); grid-template-columns:1fr 1fr; align-items:start}
-  .card{border:1px solid var(--border); border-radius:var(--radius); padding:16px; background:var(--bg); width:100%}
-  .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
-  label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
-  input,select,button{font:inherit}
-  table{width:100%; border-collapse:collapse; table-layout:fixed}
-  th,td{border-bottom:1px solid #f1f5f9; padding:8px; text-align:left; vertical-align:middle}
-  th{background:#fafafa; font-weight:600}
-  .right{text-align:right} .mono{font-variant-numeric:tabular-nums}
-  .btn{padding:10px 12px; border:1px solid #d1d5db; border-radius:999px; background:#fff; cursor:pointer}
-  .btn.primary{background:var(--accent); color:#fff; border-color:#0d8f3c}
-  .btn.warn{background:var(--danger); color:#fff; border-color:#dc2626}
-  .muted{color:var(--muted); font-size:12px}
-  .table-wrap{width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch}
-  /* 並べ替え */
-  .handle{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px;
-    border-radius:6px; border:1px solid #cbd5e1; background:#f1f5f9; color:var(--handle); cursor:grab}
-  .dragging{opacity:.6} .drop-target{outline:2px dashed #94a3b8; outline-offset:-6px}
-  /* フィールド（インラインラベル） */
-  .kv-scope .field{display:flex; align-items:center; gap:8px; flex:1 1 auto}
-  .kv-scope .f-label{color:#111; font-size:14px; min-width:var(--labelW, 120px); text-align:right}
-  .unit{color:var(--muted); font-size:12px}
+  *,*::before,*::after{ box-sizing:border-box }
+  html,body{ background:#f7f7f7 } body{ margin:16px }
+  h1{ margin:0 0 12px; font-size:20px }
+  .wrap{ display:grid; gap:var(--gap); grid-template-columns:1fr 1fr; align-items:start }
+  .card{ border:1px solid #e5e7eb; border-radius:var(--radius); padding:16px; background:#fff; width:100% }
+  .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap }
+  .muted{ color:var(--muted); font-size:12px }
+  .btn{ padding:10px 12px; border:1px solid #d1d5db; border-radius:999px; background:#fff; cursor:pointer }
+  .btn.primary{ background:var(--accent); color:#fff; border-color:#0d8f3c }
+  .btn.warn{ background:var(--danger); color:#fff; border-color:#dc2626 }
+  input,select,button{ font:inherit }
+  .table-wrap{ width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch }
+  table{ width:100%; border-collapse:collapse; table-layout:fixed }
+  th,td{ border-bottom:1px solid #f1f5f9; padding:8px; text-align:left; vertical-align:middle }
+  th{ background:#fafafa; font-weight:600 }
+  .right{ text-align:right } .mono{ font-variant-numeric:tabular-nums }
+  /* 入力フォーム（左カード）のラベル揃え */
+  .kv .field{ display:flex; align-items:center; gap:8px; flex:1 1 auto }
+  .kv .f-label{ min-width:var(--labelW); text-align:right; color:#111; font-size:14px }
+  .unit{ color:var(--muted); font-size:12px }
   .field input[type="number"], .field input[type="text"], .field select { width:220px; max-width:100% }
+  /* 並べ替え */
+  .handle{ display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px;
+           border-radius:6px; border:1px solid #cbd5e1; background:#f1f5f9; color:var(--handle); cursor:grab }
+  .dragging{ opacity:.6 } .drop-target{ outline:2px dashed #94a3b8; outline-offset:-6px }
   /* 中央の操作カードは全幅 */
-  .actions-card{grid-column:1 / -1}
-  /* モバイル */
-  @media (max-width:900px){
-    body{margin:12px}
-    .wrap{grid-template-columns:1fr}
-    input,select,button{font-size:16px} /* iOS ズーム防止 */
-    .btn{min-height:44px; width:100%}
-    .kv-scope .f-label{text-align:left}
-  }
-  /* スマホ（役職行の再配置） */
-  @media (max-width:640px){
-    #rolesTable thead{display:none}
-    .handle{width: var(--handleW); height: var(--handleW);}
-    #rolesTable tbody{display:block}
-    #rolesTable tbody tr.role-row{
+  .actions-card{ grid-column:1 / -1 }
+
+  /* 役職行（モバイルカード） */
+  @media (max-width: 700px){
+    #rolesTable thead{ display:none }
+    #rolesTable tbody{ display:block }
+    #rolesTable tbody tr.role-card{
       display:grid;
       grid-template-columns: var(--handleW) 1fr var(--delW);
       grid-template-areas:
         "handle name del"
         "coef   count del";
-      gap:8px 10px; padding:10px; border:1px solid #e5e7eb; border-radius:12px; margin-bottom:10px; background:#fff; align-items:center;
+      gap:10px 12px;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      margin-bottom:10px;
+      background:#fff;
+      align-items:center;
     }
-    #rolesTable tbody tr.role-row td{border:0; padding:0}
-    #rolesTable tbody tr.role-row td:nth-child(1){grid-area:handle}
-    #rolesTable tbody tr.role-row td:nth-child(2){grid-area:name}
-    #rolesTable tbody tr.role-row td:nth-child(3){grid-area:coef}
-    #rolesTable tbody tr.role-row td:nth-child(4){grid-area:count}
-    #rolesTable tbody tr.role-row td:nth-child(5){grid-area:del; text-align:right}
-    #rolesTable input.coef, #rolesTable input.count{width:var(--miniInputW); max-width:100%}
-    .mini{display:inline-flex; align-items:center; gap:6px}
-    .chip{font-size:11px; color:#6b7280; background:#f1f5f9; padding:2px 6px; border-radius:999px}
-    .extra{font-size:11px; color:#6b7280}
-    #rolesTable tbody tr.role-row td:nth-child(5) .btn{ width: var(--delW); min-height:36px; padding:6px 8px; }
-    .mini{ display:flex; align-items:center; gap:6px; flex-wrap:nowrap; }
-    .mini .chip{ white-space:nowrap; }
+    #rolesTable tbody tr.role-card td{ border:0; padding:0 }
+    #rolesTable tbody tr.role-card td:nth-child(1){ grid-area:handle }
+    #rolesTable tbody tr.role-card td:nth-child(2){ grid-area:name }
+    #rolesTable tbody tr.role-card td:nth-child(3){ grid-area:coef }
+    #rolesTable tbody tr.role-card td:nth-child(4){ grid-area:count }
+    #rolesTable tbody tr.role-card td:nth-child(5){ grid-area:del; text-align:right }
+    /* ミニ行：チップ＋入力を横並びで固定幅化 */
+    .mini{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap }
+    .chip{ width:var(--chipW); text-align:center; font-size:12px; color:#374151; background:#f3f4f6; padding:3px 0; border-radius:999px }
+    .mini input{ width:var(--miniInputW); text-align:right }
+    .btn.del{ width:var(--delW); min-height:36px; padding:6px 10px; }
+    .handle{ width:var(--handleW); height:var(--handleW) }
+  }
 
+  /* スマホ全般 */
+  @media (max-width: 900px){
+    body{ margin:12px }
+    .wrap{ grid-template-columns:1fr }
+    input,select,button{ font-size:16px } /* iOSズーム防止 */
+    .btn{ min-height:44px; width:100% }
+    .kv .f-label{ text-align:left }
   }
 </style>
 </head>
 <body>
-<h1>役職係数でスマート割り勘 v3（複数先払い／係数降順／長押し並べ替え）</h1>
+<h1>役職係数でスマート割り勘 v3</h1>
 
 <div class="wrap">
   <!-- 左：設定 -->
-  <section class="card kv-scope" id="settingsCard">
+  <section class="card kv" id="settingsCard">
     <!-- 合計金額 -->
     <div class="row" style="justify-content:space-between;">
       <div class="field" style="min-width:280px">
@@ -133,6 +141,8 @@
           <tbody id="rolesBody"></tbody>
         </table>
       </div>
+
+      <!-- 役職追加行 -->
       <div class="row" style="margin-top:8px;">
         <div class="field"><span class="f-label">役職名</span><input id="newRoleName" placeholder="例：取締役"></div>
         <div class="field"><span class="f-label">係数</span><input id="newRoleCoef" type="number" step="0.1" min="0" placeholder="2.0"></div>
@@ -195,7 +205,7 @@ const resultBody = document.getElementById('resultBody');
 const sumCell = document.getElementById('sumCell');
 const payerSummary = document.getElementById('payerSummary');
 
-/* ====== ラベル幅の自動調整（スコープ内で最長のラベル幅に合わせる） ====== */
+/* ====== ラベル幅（左カード）を自動同期 ====== */
 function syncLabelWidths(scopeEl){
   const labels = Array.from(scopeEl.querySelectorAll('.f-label'));
   if (!labels.length) return;
@@ -204,13 +214,10 @@ function syncLabelWidths(scopeEl){
   labels.forEach(l => l.style.minWidth = '');
   scopeEl.style.setProperty('--labelW', (max + 12) + 'px');
 }
-const kvScope = document.querySelector('.kv-scope');
-if (kvScope){
-  syncLabelWidths(kvScope);
-  const obs = new MutationObserver(() => syncLabelWidths(kvScope));
-  obs.observe(kvScope, {childList:true, subtree:true, characterData:true});
-  window.addEventListener('resize', () => syncLabelWidths(kvScope));
-}
+const kvScope = document.getElementById('settingsCard');
+const obs = new MutationObserver(() => syncLabelWidths(kvScope));
+obs.observe(kvScope, {childList:true, subtree:true, characterData:true});
+window.addEventListener('resize', () => syncLabelWidths(kvScope));
 
 /* ====== 役職セレクト更新 ====== */
 function renderRoleOptions(selectEl){
@@ -259,14 +266,14 @@ function renderRolesTable(){
     const effective = (Number(r.count)||0) + extra;
 
     const tr = document.createElement('tr');
-    tr.className = "role-row";
+    tr.className = "role-card";
     tr.dataset.index = i;
     tr.innerHTML = `
-      <td style="width:56px"><div class="handle" title="長押しでドラッグ">≡</div></td>
+      <td><div class="handle" title="長押しでドラッグ">≡</div></td>
       <td><input value="${r.name}" data-role-name style="width:100%"></td>
-      <td class="right"><div class="mini"><span class="chip">係数</span><input class="coef" type="number" step="0.1" min="0" value="${r.coef}" data-role-coef style="text-align:right"></div></td>
-      <td class="right"><div class="mini" style="justify-content:flex-end;"><span class="chip">人数</span><input class="count" type="number" step="1" min="0" value="${effective}" data-role-count style="text-align:right"> ${extra>0 ? `<span class="extra">+${extra}</span>` : ``}</div></td>
-      <td class="right"><button class="btn" data-del>削除</button></td>
+      <td class="right"><div class="mini"><span class="chip">係数</span><input class="coef" type="number" step="0.1" min="0" value="${r.coef}" data-role-coef></div></td>
+      <td class="right"><div class="mini" style="justify-content:flex-end;"><span class="chip">人数</span><input class="count" type="number" step="1" min="0" value="${effective}" data-role-count> ${extra>0 ? `<span class="muted">+${extra}</span>` : ``}</div></td>
+      <td class="right"><button class="btn del" data-del>削除</button></td>
     `;
     rolesBody.appendChild(tr);
 
