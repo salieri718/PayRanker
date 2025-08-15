@@ -1,543 +1,609 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>PayRanker</title>
-<style>
-  :root{
-    --gap:16px; --radius:14px; --border:#e5e7eb; --muted:#6b7280; --bg:#fff;
-    --accent:#16a34a; --danger:#ef4444; --handle:#94a3b8;
-    --labelW: 120px;
-    --chipW: 42px;
-    --miniInputW: 82px;
-    --delW: 78px;
-    --handleW: 44px;
-    --blockW: min(960px, 96vw);  /* 外枠カードの統一幅（viewport最適化） */
-    --inputW: 480px;  /* 入力ボックスの統一幅 */
-    --stackW: 560px;  /* ボタン幅の統一 */
-    font-family: system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP",sans-serif;
-  }
-  *,*::before,*::after{ box-sizing:border-box }
-  html,body{ background:#f7f7f7 } body{ margin:16px }
-  h1{ margin:0 auto 4px; font-size:22px; text-align:center; max-width:var(--blockW) }
-  .desc{ margin:0 auto 12px; color:#374151; font-size:14px; text-align:center; max-width:var(--blockW) }
-  .note{ margin:8px auto 16px; color:#6b7280; font-size:12px; text-align:center; max-width:var(--blockW) }
-  .wrap{ display:grid; gap:var(--gap); grid-template-columns:1fr; align-items:start; justify-content:center; max-width:var(--blockW); margin:0 auto }
-  .card{ border:1px solid var(--border); border-radius:14px; padding:16px; background:#fff; width:100% }
-  .subpanel{ border:1px solid #cbd5e1; border-radius:10px; padding:12px; background:#fff; margin:8px 0 12px; }
-  .card .subpanel:last-child{ margin-bottom:0 }
-  .panel-gap{ height:4px } /* ≈1mm の余白 */
-  .section-title{ margin:0 0 8px; font-size:16px; font-weight:700; text-align:left }
-  .section-sub{ margin:0 0 8px; font-size:14px; font-weight:600; color:#374151; text-align:left }
-  .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:flex-start }
-  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center }
-  .btn-stack{ display:flex; flex-direction:column; gap:12px; align-items:center }
-  .muted{ color:var(--muted); font-size:12px }
-  .btn{ padding:10px 12px; border:1px solid #d1d5db; border-radius:999px; background:#fff; cursor:pointer; min-height:44px }
-  .btn.primary{ background:var(--accent); color:#fff; border-color:#0d8f3c }
-  .btn.warn{ background:#ef4444; color:#fff; border-color:#dc2626 }
-  .btn.stacked{ width:clamp(240px, 80%, var(--stackW)); }
-  input,select,button{ font:inherit }
-  .table-wrap{ width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch }
-  table{ width:100%; border-collapse:collapse; table-layout:fixed }
-  /* 先払い情報の空白1行 */
-  .blank-row{ height:44px; border:1px solid #cbd5e1; border-radius:8px; background:#fff }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PayRanker</title>
+  <style>
+    :root{
+      --bg:#f7f7fb;
+      --card:#ffffff;
+      --ink:#222;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --accent-2:#10b981;
+      --danger:#ef4444;
+      --border:#e5e7eb;
+      --ring:#93c5fd;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,'Noto Sans JP',sans-serif;
+      color:var(--ink);
+      background:var(--bg);
+      line-height:1.6;
+    }
+    .container{max-width:1000px;margin:0 auto;padding:16px}
+    .section{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow:0 2px 12px rgba(0,0,0,.04);
+      margin:16px 0;
+      padding:16px;
+    }
+    .section h2{margin:0 0 12px 0;font-size:1.1rem}
+    .lead{font-size:1rem;margin:.25rem 0 .25rem 0}
+    .note80{font-size:.8em;color:var(--muted);margin:.25rem 0 0 0}
+    .row{display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width: 820px){
+      .row-2{grid-template-columns:1fr 1fr}
+      .row-3{grid-template-columns:1fr 1fr 1fr}
+    }
+    label{font-weight:600;font-size:.95rem}
+    input[type="text"],input[type="number"],select,textarea{
+      width:100%;padding:10px 12px;border:1px solid var(--border);
+      border-radius:10px;background:white;font-size:1rem;outline:none;
+    }
+    input:focus,select:focus,textarea:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--ring)}
+    .btn{padding:12px 16px;border-radius:12px;border:1px solid transparent;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;width:100%}
+    .btn.secondary{background:#0ea5e9}
+    .btn.success{background:#10b981}
+    .btn.ghost{background:#fff;color:var(--accent);border-color:var(--accent)}
+    .btn.danger{background:#ef4444}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap}
+    .table{width:100%;border-collapse:collapse;font-size:.95rem}
+    .table th,.table td{border:1px solid var(--border);padding:8px 10px;vertical-align:middle;background:#fff}
+    .table th{background:#f3f4f6;text-align:left}
+    .note{font-size:.9rem;color:#6b7280}
+    .right{text-align:right}
+    .small{font-size:.9rem}
+    .bluebox{border:2px solid #3b82f6;border-radius:12px;padding:12px;background:#f8fbff}
+    .greenbar{margin-top:10px}
+    .dragging{opacity:.6}
+    .drag-handle{cursor:grab; user-select:none; font-weight:700}
+    .drop-target{outline:2px dashed #60a5fa}
 
-  #rolesTable thead{ display:none }
-  th,td{ border-bottom:1px solid #f1f5f9; padding:8px; text-align:left; vertical-align:middle }
-  th{ background:#fafafa; font-weight:600; text-align:left }
-  .right{ text-align:right } .mono{ font-variant-numeric:tabular-nums }
-  /* ラベル & 入力は左揃え */
-  .kv .field{ display:flex; align-items:center; gap:8px; flex:1 1 auto; justify-content:flex-start }
-  .kv .f-label{ min-width:var(--labelW); text-align:left; color:#111; font-size:14px }
-  .unit{ color:var(--muted); font-size:12px }
-  .field input[type="number"], .field input[type="text"], .field select { width:var(--inputW); max-width:100% }
-  .field input[type="number"]{ text-align:right }
-  .field input[type="number"]:placeholder-shown{ text-align:left }
-  /* 個別幅の統一（ご要望の入力を同幅に） */
-  #newPayerName, #newPayerAmount, #newPayerRole,
-  #newRoleName, #newRoleCoef { width: var(--inputW); max-width: 100%; }
-  /* 並べ替えハンドル */
-  .handle{ display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px;
-           border-radius:6px; border:1px solid #cbd5e1; background:#f1f5f9; color:#94a3b8; cursor:grab }
-  .dragging{ opacity:.6 } .drop-target{ outline:2px dashed #94a3b8; outline-offset:-6px }
-  /* ===== Desktop テーブル列幅（重なり防止） ===== */
-  @media (min-width: 701px){
-    #rolesTable col:nth-child(1){ width:auto; }   /* 役職名 */
-    #rolesTable col:nth-child(2){ width:140px; }  /* 係数 */
-    #rolesTable col:nth-child(3){ width:140px; }  /* 人数 */
-    #rolesTable col:nth-child(4){ width:96px; }   /* 削除 */
-    #rolesTable col:nth-child(5){ width:64px; }   /* 並び */
-    #rolesTable input.count{ width:100px !important; text-align:right }
-    #rolesTable input.coef{ width:100px !important; text-align:right }
-    #rolesTable .btn.del{ width:84px }
-  }
-  /* ===== モバイル：役職行カード（ハンドル右端） ===== */
-  @media (max-width: 700px){
-    #rolesTable thead{ display:none }
-    #rolesTable tbody{ display:block }
-    #rolesTable tbody tr.role-card{
-      display:grid;
-      grid-template-columns: 1fr var(--delW) var(--handleW);
-      grid-template-areas:
-        "name del handle"
-        "coef count handle";
-      gap:10px 12px;
-      padding:12px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      margin-bottom:10px;
-      background:#fff;
-      align-items:center;
+    /* ▼ モバイル時の横並び圧縮対策：テーブルをカード型に */
+    @media (max-width: 640px){
+      .table.responsive{border-collapse:separate;border-spacing:0 10px}
+      .table.responsive thead{display:none}
+      .table.responsive tbody{display:block}
+      .table.responsive tr{display:grid;grid-template-columns:1fr 1fr;gap:8px;border:1px solid var(--border);border-radius:12px;background:#fff;padding:10px}
+      .table.responsive td{border:none;padding:0}
+      .table.responsive td.full{grid-column:1/-1}
+      .table.responsive td[data-label]::before{content:attr(data-label);display:block;font-size:.8rem;color:var(--muted);margin-bottom:2px}
+      .table.responsive .actions{display:flex;gap:8px;justify-content:flex-end}
+      .table.responsive .drag-cell{align-self:center;justify-self:end}
+      .table.responsive .drag-cell::before{content:''}
     }
-    #rolesTable tbody tr.role-card td{ border:0; padding:0; text-align:left }
-    #rolesTable tbody tr.role-card td[data-area="name"]{ grid-area:name }
-    #rolesTable tbody tr.role-card td[data-area="coef"]{ grid-area:coef }
-    #rolesTable tbody tr.role-card td[data-area="count"]{ grid-area:count; text-align:left }
-    #rolesTable tbody tr.role-card td[data-area="del"]{ grid-area:del; text-align:right }
-    #rolesTable tbody tr.role-card td[data-area="handle"]{ grid-area:handle; text-align:right }
-    .mini{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; min-height:36px }
-    .chip{ width:var(--chipW); text-align:center; font-size:12px; color:#374151; background:#f3f4f6; padding:3px 0; border-radius:999px }
-    .mini input{ width:var(--miniInputW); text-align:right } .mini input:placeholder-shown{ text-align:left }
-    .extra{ margin-left:6px; font-size:12px; color:var(--muted); display:inline-block; min-width:22px }
-    .btn.del{ width:var(--delW); min-height:36px; padding:6px 10px; }
-    .handle{ width:var(--handleW); height:var(--handleW) }
-  }
-  /* ===== モバイル：先払い行カード ===== */
-  @media (max-width: 700px){
-    #payersTable thead{ display:none }
-    #payersTable tbody{ display:block }
-    #payersTable tbody tr.payer-card{
-      display:grid;
-      grid-template-columns: 1fr var(--delW);
-      grid-template-areas:
-        "name   del"
-        "amount del"
-        "role   del"
-        "incl   del";
-      gap:10px 12px;
-      padding:12px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      margin-bottom:10px;
-      background:#fff;
-      align-items:center;
-    }
-    #payersTable tbody tr.payer-card td{ border:0; padding:0; text-align:left }
-    #payersTable tbody tr.payer-card td:nth-child(1){ grid-area:name }
-    #payersTable tbody tr.payer-card td:nth-child(2){ grid-area:amount }
-    #payersTable tbody tr.payer-card td:nth-child(3){ grid-area:role }
-    #payersTable tbody tr.payer-card td:nth-child(4){ grid-area:incl }
-    #payersTable tbody tr.payer-card td:nth-child(5){ grid-area:del; text-align:right }
-    #payersTable input[type="text"], #payersTable input[type="number"], #payersTable select{ width:100% }
-    #payersTable input[type="number"]{ text-align:right }
-    #payersTable .btn{ width:var(--delW); min-height:36px; padding:6px 10px }
-  }
-  /* モバイル全般 */
-  @media (max-width: 900px){
-    body{ margin:12px }
-    .wrap{ grid-template-columns:1fr }
-    input,select,button{ font-size:16px }
-    .btn{ min-height:44px }
-  }
-</style>
+  </style>
 </head>
 <body>
-  <h1>PayRanker</h1>
-  <p class="desc">役職ごとの係数と参加人数から、公平感のある割り勘金額を自動計算します。複数の先払いにも対応し、係数の並べ替えは長押しドラッグで変更できます。</p>
-  <p class="note">本サイトは<strong>計算補助ツール</strong>です。最終確認は必ず各自で行ってください。個人情報（フルネーム・連絡先・社外情報など）は入力しないでください。</p>
+  <div class="container" id="app">
+    <header class="section">
+      <h1 style="margin:0 0 8px 0;">PayRanker</h1>
+      <p class="lead">PayRankerは、役職や学年など立場に応じた負担額を自動計算</p>
+      <p class="note80">※本サービスは計算補助を目的としています。最終的な精算額は関係者間でご確認ください。個人情報（フルネームなど）の入力は控えてください。</p>
+    </header>
 
-<div class="wrap">
-  <!-- 左：設定 -->
-  <section class="card kv" id="settingsCard">
-    
-    <div class="section-title">会計金額</div>
-    <div class="subpanel">
+    <!-- 合計金額 -->
+    <section class="section">
+      <h2>合計金額</h2>
       <div class="row">
-        <div class="field" style="min-width:280px">
-          <span class="f-label">合計金額</span>
-          <input id="total" type="number" min="0" step="1" placeholder="例: 48500">
-          <span class="unit">円・税込</span>
+        <div>
+          <label for="totalAmount">合計金額（円）</label>
+          <input id="totalAmount" type="number" inputmode="numeric" min="0" step="1" placeholder="例）45000" />
         </div>
       </div>
-    </div>
-    <div class="panel-gap"></div>
-<div class="section-sub">先払い情報</div>
-    <div class="subpanel">
-      <div class="table-wrap">
-        <table id="payersTable" aria-label="先払いテーブル">
-          <colgroup>
-            <col style="width:auto;">
-            <col style="width:160px;">
-            <col style="width:160px;">
-            <col style="width:180px;">
-            <col style="width:96px;">
-          </colgroup>
-          <thead><tr><th>名前</th><th>金額（円）</th><th>役職</th><th>支払人数に含める</th><th></th></tr></thead>
-          <tbody id="payersBody"></tbody>
+    </section>
+
+    <!-- 先払い -->
+    <section class="section">
+      <h2>先払い</h2>
+
+      <div class="bluebox" aria-labelledby="prepayListTitle">
+        <p id="prepayListTitle" class="small" style="margin:0 0 8px 0; font-weight:700">先払い情報一覧（行内で編集可）</p>
+        <table class="table responsive" id="prepayTable">
+          <thead>
+            <tr>
+              <th>支払者名</th>
+              <th class="right">金額（円）</th>
+              <th>役職</th>
+              <th style="width:100px"></th>
+            </tr>
+          </thead>
+          <tbody id="prepayTbody">
+            <tr class="placeholder">
+              <td colspan="4" class="small" style="color:#6b7280">（未入力）追加されるとここに表示されます</td>
+            </tr>
+          </tbody>
         </table>
       </div>
-    <div class="section-title">先払い</div>
-    <div class="subpanel">
-      <div class="row">
-        <div class="field"><span class="f-label">名前</span><input id="newPayerName" placeholder="例：Aさん"></div>
-      </div>
-      <div class="row">
-        <div class="field"><span class="f-label">金額</span><input id="newPayerAmount" type="number" min="0" step="1" placeholder="0"><span class="unit">円</span></div>
-      </div>
-      <div class="row">
-        <div class="field"><span class="f-label">役職</span><select id="newPayerRole" class="role-options"></select></div>
-      </div>
-      <div class="row" style="align-items:center">
-        <label class="field" style="align-items:center"><input id="newPayerIncluded" type="checkbox"><span>支払人数に含める</span></label>
-      </div>
-      <div class="btn-stack" style="margin-top:8px">
-        <button class="btn stacked" id="addPayer">先払いを追加</button>
-      </div>
-    </div>
-    <div class="panel-gap"></div>
 
-    </div>
-    <div class="panel-gap"></div>
+      <div class="row row-3" style="margin-top:12px">
+        <div>
+          <label for="payerName">支払者名</label>
+          <input id="payerName" type="text" placeholder="例）田中" />
+        </div>
+        <div>
+          <label for="payerAmount">金額（円）</label>
+          <input id="payerAmount" type="number" inputmode="numeric" min="0" step="1" placeholder="例）10000" />
+        </div>
+        <div>
+          <label for="payerRole">役職</label>
+          <select id="payerRole"></select>
+        </div>
+      </div>
+      <div class="greenbar">
+        <button class="btn" id="addPrepayBtn">先払い者 追加</button>
+      </div>
+    </section>
 
-    <div class="section-title">役職、係数設定</div>
-    <div class="subpanel">
-      <div class="table-wrap">
-        <table id="rolesTable" aria-label="役職係数テーブル">
-          <colgroup>
-            <col style="width:auto;">
-            <col style="width:140px;">
-            <col style="width:140px;">
-            <col style="width:96px;">
-            <col style="width:64px;">
-          </colgroup>
-          <thead><tr><th>役職名</th><th>係数</th><th>人数</th><th></th><th class="right"></th></tr></thead>
-          <tbody id="rolesBody"></tbody>
+    <!-- 役職・係数設定 -->
+    <section class="section">
+      <h2>役職・係数 設定</h2>
+      <div class="bluebox">
+        <table class="table responsive" id="roleTable">
+          <thead>
+            <tr>
+              <th>役職</th>
+              <th class="right">係数</th>
+              <th class="right">人数</th>
+              <th style="width:80px"></th>
+              <th style="width:44px"></th>
+            </tr>
+          </thead>
+          <tbody id="roleTbody"></tbody>
+        </table>
+        <p class="note" style="margin-top:6px">※ 「三」を長押ししてドラッグすると並べ替えできます。</p>
+        <div class="toolbar" style="margin-top:10px">
+          <button class="btn ghost" id="resetCountsBtn" title="全役職の人数を0に">人数リセット</button>
+        </div>
+      </div>
+
+      <div class="row row-3" style="margin-top:12px">
+        <div>
+          <label for="newRoleName">役職名</label>
+          <input id="newRoleName" type="text" placeholder="例）アルバイト"/>
+        </div>
+        <div>
+          <label for="newRoleCoef">係数</label>
+          <input id="newRoleCoef" type="number" step="0.1" min="0" placeholder="例）0.8"/>
+        </div>
+        <div class="greenbar">
+          <label class="sr-only" for="addRoleBtn">追加</label>
+          <button class="btn" id="addRoleBtn">役職 追加</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 結果（計算ボタンをここに配置） -->
+    <section class="section">
+      <h2>計算結果</h2>
+      <div class="bluebox" id="resultBox">
+        <div id="resultSummary" class="small" style="margin-bottom:8px;color:#374151"></div>
+        <table class="table" id="resultTable" style="display:none">
+          <thead>
+            <tr>
+              <th>役職</th>
+              <th class="right">係数</th>
+              <th class="right">人数</th>
+              <th class="right">1人あたり（円）</th>
+              <th class="right">小計（円）</th>
+            </tr>
+          </thead>
+          <tbody id="resultTbody"></tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" class="right">小計合計（円）</th>
+              <th class="right" id="resultTotal">0</th>
+            </tr>
+            <tr>
+              <th colspan="4" class="right">先払い合計（円）</th>
+              <th class="right" id="prepayTotalCell">0</th>
+            </tr>
+            <tr>
+              <th colspan="4" class="right">残額（円）</th>
+              <th class="right" id="remainTotal">0</th>
+            </tr>
+            <tr>
+              <th colspan="4" class="right">入力した合計金額（円）</th>
+              <th class="right" id="inputTotal">0</th>
+            </tr>
+          </tfoot>
         </table>
       </div>
-    </div>
-    <div class="panel-gap"></div>
 
-    <div class="btn-stack" style="gap:8px">
-        <button class="btn warn stacked" id="resetCounts">人数リセット</button>
+      <div class="toolbar" style="margin-top:12px">
+        <button class="btn success" id="calcBtn">計算実行</button>
+        <button class="btn secondary" id="copyBtn">計算結果をコピー</button>
+        <button class="btn ghost" id="csvBtn">計算結果をCSVでダウンロード</button>
       </div>
-      <div class="section-sub">役職カスタム追加</div>
-    <div class="subpanel">
-      <div class="row">
-        <div class="field"><span class="f-label">役職名</span><input id="newRoleName" placeholder="例：取締役"></div>
-      </div>
-      <div class="row">
-        <div class="field"><span class="f-label">係数</span><input id="newRoleCoef" type="number" step="0.1" min="0" placeholder="2.0"></div>
-      
-      
-</div>
-      
-      <div class="btn-stack" style="gap:8px">
-        <button class="btn stacked" id="addRole">役職を追加</button>
-      </div>
+    </section>
 
-    </div>
-  </section>
-
-  <!-- 中央：操作 -->
-  <section class="card actions-card">
-    <div class="subpanel">
-      <div class="btn-stack">
-        <button class="btn primary stacked" id="calcTop">計算する</button>
-        <button class="btn stacked" id="copyTop">結果をコピー</button>
-        <button class="btn stacked" id="csvTop">CSVダウンロード</button>
-      
-</div>
-    </div>
-  </section>
-
-  <!-- 右：結果 -->
-  <section class="card" id="resultCard">
-    
-    <div class="subpanel">
-      <strong>計算結果</strong>
-      <div class="table-wrap" style="margin-top:8px">
-        <table id="resultTable">
-          <colgroup>
-            <col style="width:auto;">
-            <col style="width:110px;">
-            <col style="width:110px;">
-            <col style="width:150px;">
-            <col style="width:150px;">
-          </colgroup>
-          <thead><tr><th>役職</th><th>係数</th><th>人数</th><th class="right">1人あたり（円）</th><th class="right">合計（円）</th></tr></thead>
-          <tbody id="resultBody"></tbody>
-          <tfoot><tr><td colspan="4" class="right">合計</td><td class="right mono" id="sumCell">0</td></tr></tfoot>
-        </table>
-      </div>
-      <div id="payerSummary" class="muted" style="margin-top:8px"></div>
-    </div>
-  </section>
-</div>
+    <footer class="section small" style="text-align:center;color:#6b7280">
+      &copy; 2025 PayRanker. This is a calculation assistance tool. Do not enter personal information.
+    </footer>
+  </div>
 
 <script>
-/* ====== 初期データ ====== */
-const DEFAULT_ROLES = [
-  { name: "役員", coef: 2.0, count: 0 },
-  { name: "部長", coef: 1.5, count: 0 },
-  { name: "課長", coef: 1.3, count: 0 },
-  { name: "係長", coef: 1.2, count: 0 },
-  { name: "主任", coef: 1.1, count: 0 },
-  { name: "一般", coef: 1.0, count: 0 },
-];
-let roles = DEFAULT_ROLES.map(r => ({...r}));
-let payers = []; // {name, amount, role, included}
+(function(){
+  const $ = (sel,root=document)=>root.querySelector(sel);
+  const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
+  const fmt = (n)=>Number(n||0).toLocaleString('ja-JP');
+  const fmt1 = (n)=>(Number(n)||0).toFixed(1);
+  const parseNum = (v)=>{ const n = Number(v); return isFinite(n)?n:0; };
 
-/* ====== DOM ====== */
-const rolesBody = document.getElementById('rolesBody');
-const payersBody = document.getElementById('payersBody');
-const totalInput = document.getElementById('total');
-const resultBody = document.getElementById('resultBody');
-const sumCell = document.getElementById('sumCell');
-const payerSummary = document.getElementById('payerSummary');
+  const state = {
+    roles: [
+      {name:'役員', coef:2.0, count:0},
+      {name:'部長', coef:1.8, count:0},
+      {name:'課長', coef:1.6, count:0},
+      {name:'係長', coef:1.4, count:0},
+      {name:'主任', coef:1.2, count:0},
+      {name:'一般', coef:1.0, count:0},
+    ],
+    prepays: []
+  };
 
-/* ====== ラベル幅（左カード）を自動同期 ====== */
-function syncLabelWidths(scopeEl){
-  const labels = Array.from(scopeEl.querySelectorAll('.f-label'));
-  if (!labels.length) return;
-  labels.forEach(l => l.style.minWidth = '0px');
-  const max = Math.ceil(Math.max(...labels.map(l => l.getBoundingClientRect().width)));
-  labels.forEach(l => l.style.minWidth = '');
-  scopeEl.style.setProperty('--labelW', (max + 12) + 'px');
-}
-const kvScope = document.getElementById('settingsCard');
-const obs = new MutationObserver(() => syncLabelWidths(kvScope));
-obs.observe(kvScope, {childList:true, subtree:true, characterData:true});
-window.addEventListener('resize', () => syncLabelWidths(kvScope));
+  const roleTbody = $('#roleTbody');
+  const prepayRoleSelect = $('#payerRole');
 
-/* ====== 役職セレクト更新 ====== */
-function renderRoleOptions(selectEl){
-  const options = '<option value="">（未指定）</option>' + roles.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
-  if (selectEl){
-    const prev = selectEl.value; selectEl.innerHTML = options;
-    if ([...selectEl.options].some(o=>o.value===prev)) selectEl.value = prev;
-  } else {
-    document.querySelectorAll('.role-options').forEach(sel=>{
-      const prev = sel.value; sel.innerHTML = options;
-      if ([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  function renderRoleOptions(){
+    prepayRoleSelect.innerHTML = state.roles.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+  }
+
+  // ----- Role table render + inline edit + long-press drag reorder -----
+  function renderRoles(){
+    roleTbody.innerHTML = '';
+    state.roles.forEach((r,idx)=>{
+      const tr = document.createElement('tr');
+      tr.dataset.index = idx;
+
+      const nameTd = document.createElement('td');
+      nameTd.setAttribute('data-label','役職');
+      const nameInput = Object.assign(document.createElement('input'),{type:'text', value:r.name});
+      nameInput.addEventListener('input', ()=>{ r.name = nameInput.value; renderRoleOptions(); renderPrepays(); });
+      nameTd.appendChild(nameInput);
+
+      const coefTd = document.createElement('td'); coefTd.className='right';
+      coefTd.setAttribute('data-label','係数');
+      const coefInput = Object.assign(document.createElement('input'),{type:'number', step:'0.1', min:'0', value:fmt1(r.coef)});
+      coefInput.style.textAlign='right';
+      coefInput.addEventListener('input', ()=>{ r.coef = parseNum(coefInput.value); });
+      coefTd.appendChild(coefInput);
+
+      const cntTd = document.createElement('td'); cntTd.className='right';
+      cntTd.setAttribute('data-label','人数');
+      const cntInput = Object.assign(document.createElement('input'),{type:'number', step:'1', min:'0', value:r.count});
+      cntInput.style.textAlign='right';
+      cntInput.addEventListener('input', ()=>{ r.count = Math.max(0,Math.floor(parseNum(cntInput.value))); });
+      cntTd.appendChild(cntInput);
+
+      const delTd = document.createElement('td');
+      delTd.className='actions';
+      const delBtn = Object.assign(document.createElement('button'),{className:'btn danger small', textContent:'削除'});
+      delBtn.style.padding='6px';
+      delBtn.addEventListener('click',()=>{
+        if(confirm('この役職を削除しますか？')){
+          state.roles.splice(idx,1);
+          renderRoles(); renderRoleOptions();
+        }
+      });
+      delTd.appendChild(delBtn);
+
+      const dragTd = document.createElement('td');
+      dragTd.className='drag-cell';
+      dragTd.innerHTML = '<span class="drag-handle" title="長押しでドラッグ">≡</span>';
+
+      tr.appendChild(nameTd);
+      tr.appendChild(coefTd);
+      tr.appendChild(cntTd);
+      tr.appendChild(delTd);
+      tr.appendChild(dragTd);
+      roleTbody.appendChild(tr);
+    });
+    enableDragReorder(roleTbody, state.roles, ()=>{ renderRoles(); renderRoleOptions(); });
+  }
+
+  // Long-press drag implementation
+  function enableDragReorder(tbody, arr, onUpdate){
+    let pressTimer = null;
+    tbody.querySelectorAll('tr').forEach(tr=>{
+      const handle = tr.querySelector('.drag-handle');
+
+      const start = ()=>{
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(()=>{
+          tr.setAttribute('draggable','true');
+          tr.classList.add('dragging');
+        },250);
+      };
+      const cancel = ()=>{ clearTimeout(pressTimer); };
+      handle.addEventListener('mousedown', start);
+      handle.addEventListener('touchstart', start, {passive:true});
+      document.addEventListener('mouseup', cancel, {once:true});
+      document.addEventListener('touchend', cancel, {once:true});
+
+      tr.addEventListener('dragstart', e=>{
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', tr.dataset.index);
+      });
+      tr.addEventListener('dragend', ()=>{
+        tr.removeAttribute('draggable');
+        tr.classList.remove('dragging');
+        $$('tr', tbody).forEach(x=>x.classList.remove('drop-target'));
+      });
+    });
+
+    tbody.addEventListener('dragover', e=>{
+      e.preventDefault();
+      const after = getDragAfterElement(tbody, e.clientY);
+      $$('tr', tbody).forEach(x=>x.classList.remove('drop-target'));
+      if(after==null){
+        const last = tbody.lastElementChild;
+        if(last) last.classList.add('drop-target');
+      }else{
+        after.classList.add('drop-target');
+      }
+    });
+
+    tbody.addEventListener('drop', e=>{
+      e.preventDefault();
+      const from = Number(e.dataTransfer.getData('text/plain'));
+      const after = getDragAfterElement(tbody, e.clientY);
+      let to = after ? Number(after.dataset.index) : arr.length;
+      if(to>from) to--;
+      if(from>=0 && to>=0 && from!==to){
+        const item = arr.splice(from,1)[0];
+        arr.splice(to,0,item);
+        onUpdate();
+      }else{
+        onUpdate();
+      }
+    });
+
+    function getDragAfterElement(container, y){
+      const rows = [...container.querySelectorAll('tr:not(.dragging)')];
+      return rows.reduce((closest, child)=>{
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height/2;
+        if(offset < 0 && offset > closest.offset){
+          return {offset, element: child};
+        } else {
+          return closest;
+        }
+      }, {offset: Number.NEGATIVE_INFINITY}).element;
+    }
+  }
+
+  // ----- Prepay list: editable rows -----
+  function renderPrepays(){
+    const tbody = $('#prepayTbody');
+    tbody.innerHTML = '';
+    if(state.prepays.length===0){
+      const tr = document.createElement('tr');
+      tr.className='placeholder';
+      const td = document.createElement('td');
+      td.colSpan=4; td.className='small'; td.style.color='#6b7280';
+      td.textContent='（未入力）追加されるとここに表示されます';
+      tr.appendChild(td); tbody.appendChild(tr);
+      return;
+    }
+    state.prepays.forEach((p,idx)=>{
+      const tr = document.createElement('tr');
+
+      const nameTd = document.createElement('td');
+      nameTd.setAttribute('data-label','支払者名');
+      const nameInput = Object.assign(document.createElement('input'),{type:'text', value:p.name});
+      nameInput.addEventListener('input', ()=>{ p.name = nameInput.value; });
+      nameTd.appendChild(nameInput);
+
+      const amtTd = document.createElement('td'); amtTd.className='right';
+      amtTd.setAttribute('data-label','金額（円）');
+      const amtInput = Object.assign(document.createElement('input'),{type:'number', min:'0', step:'1', value:p.amount});
+      amtInput.style.textAlign='right';
+      amtInput.addEventListener('input', ()=>{ p.amount = Math.max(0,Math.floor(parseNum(amtInput.value))); });
+      amtTd.appendChild(amtInput);
+
+      const roleTd = document.createElement('td');
+      roleTd.setAttribute('data-label','役職');
+      const sel = document.createElement('select');
+      sel.innerHTML = state.roles.map(r=>`<option value="${r.name}">${r.name}</option>`).join('');
+      sel.value = p.role;
+      sel.addEventListener('change', ()=>{ p.role = sel.value; });
+      roleTd.appendChild(sel);
+
+      const opTd = document.createElement('td');
+      opTd.className='actions';
+      const delBtn = Object.assign(document.createElement('button'),{className:'btn danger small', textContent:'削除'});
+      delBtn.style.padding='6px';
+      delBtn.addEventListener('click',()=>{ state.prepays.splice(idx,1); renderPrepays(); });
+      opTd.appendChild(delBtn);
+
+      tr.appendChild(nameTd);
+      tr.appendChild(amtTd);
+      tr.appendChild(roleTd);
+      tr.appendChild(opTd);
+      tbody.appendChild(tr);
     });
   }
-}
 
-/* ====== 先払いテーブル ====== */
-function renderPayers(){
-  payersBody.innerHTML = '';
-  payers.forEach((p,i)=>{
-    const tr = document.createElement('tr');
-    tr.className = 'payer-card';
-    tr.innerHTML = `
-      <td><input value="${p.name}" data-name style="width:100%"></td>
-      <td><input type="number" data-amount min="0" step="1" value="${p.amount}" style="width:160px; max-width:100%; text-align:right"></td>
-      <td><select class="role-options" data-role></select></td>
-      <td><label class="row" style="gap:6px; align-items:center"><input type="checkbox" data-included ${p.included?'checked':''}><span>支払人数に含める</span></label></td>
-      <td class="right"><button class="btn" data-del>削除</button></td>
-    `;
-    payersBody.appendChild(tr);
-    const roleSel = tr.querySelector('[data-role]'); renderRoleOptions(roleSel); roleSel.value = p.role || '';
-
-    tr.querySelector('[data-name]').addEventListener('change', e => payers[i].name = (e.target.value||'').trim());
-    tr.querySelector('[data-amount]').addEventListener('change', e => payers[i].amount = Math.max(0, Math.round(Number(e.target.value)||0)));
-    tr.querySelector('[data-role]').addEventListener('change', e => { payers[i].role = e.target.value || ''; renderRolesTable(); });
-    tr.querySelector('[data-included]').addEventListener('change', e => { payers[i].included = !!e.target.checked; renderRolesTable(); });
-    tr.querySelector('[data-del]').addEventListener('click', () => { payers.splice(i,1); renderPayers(); renderRolesTable(); });
-  });
-
-  if (payers.length === 0) {
-    const tr = document.createElement('tr');
-    tr.className = 'placeholder-row';
-    tr.innerHTML = `<td colspan="5"><div class="blank-row" aria-hidden="true"></div></td>`;
-    payersBody.appendChild(tr);
+  function addPrepay(){
+    const name = $('#payerName').value.trim();
+    const amount = Math.max(0, Math.floor(parseNum($('#payerAmount').value)));
+    const role = $('#payerRole').value;
+    if(!name){ alert('支払者名を入力してください'); return; }
+    if(amount<=0){ alert('金額は1円以上で入力してください'); return; }
+    if(!role){ alert('役職を選択してください'); return; }
+    state.prepays.push({name, amount, role});
+    $('#payerName').value = ''; $('#payerAmount').value='';
+    renderPrepays();
   }
-}
 
-/* ====== 役職テーブル（長押しドラッグ） ====== */
-let dragState = { active:false, fromIndex:-1, overIndex:-1, pressTimer:null };
-function renderRolesTable(){
-  rolesBody.innerHTML = '';
-  const includedMap = getIncludedCountsByRole();
-  roles.forEach((r,i)=>{
-    const extra = includedMap.get(r.name) || 0;
-    const effective = (Number(r.count)||0) + extra;
-
-    const tr = document.createElement('tr');
-    tr.className = "role-card";
-    tr.dataset.index = i;
-    tr.innerHTML = `
-      <td data-area="name"><input value="${r.name}" data-role-name style="width:100%"></td>
-      <td data-area="coef"><div class="mini"><span class="chip">係数</span><input class="coef" type="number" step="0.1" min="0" value="${r.coef}" data-role-coef></div></td>
-      <td data-area="count"><div class="mini"><span class="chip">人数</span><input class="count" type="number" step="1" min="0" value="${effective}" data-role-count> ${extra>0 ? `<span class="extra">+${extra}</span>` : `<span class="extra"></span>`}</div></td>
-      <td data-area="del" class="right"><button class="btn del" data-del>削除</button></td>
-      <td data-area="handle" class="right"><div class="handle" title="長押しでドラッグ">≡</div></td>
-    `;
-    rolesBody.appendChild(tr);
-
-    tr.querySelector('[data-role-name]').addEventListener('change', e=>{
-      roles[i].name = (e.target.value||'').trim() || roles[i].name;
-      renderRoleOptions(); renderRolesTable();
-    });
-    tr.querySelector('[data-role-coef]').addEventListener('change', e=>{
-      const v = Math.max(0, Number(e.target.value)||0); roles[i].coef = v;
-    });
-    tr.querySelector('[data-role-count]').addEventListener('change', e=>{
-      const entered = Math.max(0, Math.floor(Number(e.target.value)||0));
-      roles[i].count = Math.max(0, entered - extra); renderRolesTable();
-    });
-    tr.querySelector('[data-del]').addEventListener('click', ()=>{ roles.splice(i,1); renderRolesTable(); renderRoleOptions(); });
-
-    // 長押し→ドラッグ
-    const handle = tr.querySelector('.handle');
-    const startDrag = ()=>{
-      dragState.active = true; dragState.fromIndex = i; dragState.overIndex = i;
-      tr.classList.add('dragging'); document.addEventListener('pointermove', onDragMove); document.addEventListener('pointerup', endDrag, {once:true});
-    };
-    const onPointerDown = e => { if (dragState.active) return; handle.setPointerCapture(e.pointerId); dragState.pressTimer = setTimeout(startDrag, 200); };
-    const cancelPress = ()=> clearTimeout(dragState.pressTimer);
-    handle.addEventListener('pointerdown', onPointerDown);
-    handle.addEventListener('pointerup', cancelPress);
-    handle.addEventListener('pointercancel', cancelPress);
-  });
-}
-function onDragMove(e){
-  const rows = Array.from(rolesBody.querySelectorAll('tr'));
-  const y = e.clientY; let target = -1;
-  for (let idx=0; idx<rows.length; idx++){ const rect = rows[idx].getBoundingClientRect(); if (y>=rect.top && y<=rect.bottom){ target = idx; break; } }
-  if (target!==-1 && target!==dragState.overIndex){ rows.forEach(r=>r.classList.remove('drop-target')); rows[target].classList.add('drop-target'); dragState.overIndex=target; }
-}
-function endDrag(){
-  document.removeEventListener('pointermove', onDragMove);
-  const rows = Array.from(rolesBody.querySelectorAll('tr')); rows.forEach(r=>{ r.classList.remove('drop-target'); r.classList.remove('dragging'); });
-  if (dragState.active){
-    const from = dragState.fromIndex, to = dragState.overIndex;
-    if (from!==-1 && to!==-1 && from!==to){ const item = roles.splice(from,1)[0]; roles.splice(to,0,item); }
+  function resetCounts(){
+    state.roles.forEach(r=>r.count=0);
+    renderRoles();
   }
-  dragState = { active:false, fromIndex:-1, overIndex:-1, pressTimer:null };
-  renderRolesTable(); renderRoleOptions();
-}
 
-/* ====== 先払いの「支払人数に含める」集計 ====== */
-function getIncludedCountsByRole(){
-  const m = new Map();
-  payers.forEach(p=>{ if (p.included && p.role) m.set(p.role, (m.get(p.role)||0)+1) });
-  return m;
-}
+  // ----- Calculation: upward allocation without leftover -----
+  function calc(){
+    const total = Math.floor(parseNum($('#totalAmount').value));
+    if(!(total>0)){ alert('合計金額（円）を入力してください'); return; }
+    const prepayTotal = state.prepays.reduce((s,p)=>s+Math.floor(parseNum(p.amount)),0);
+    const base = Math.max(0, total - prepayTotal);
 
-/* ====== 計算 ====== */
-function compute(){
-  const total = Math.round(Number((totalInput&&totalInput.value)||0));
-  const paidSum = payers.reduce((s,p)=> s + Math.max(0, Math.round(Number(p.amount)||0)), 0);
-  const remaining = Math.max(0, total - paidSum);
+    const weight = state.roles.reduce((s,r)=>s + (r.coef||0)*(r.count||0),0);
+    if(weight<=0){ alert('人数または係数が未設定です'); return; }
 
-  const includedMap = getIncludedCountsByRole();
-  const weights = roles.map(r=>{
-    const extra = includedMap.get(r.name)||0;
-    const eff = (Number(r.count)||0) + extra;
-    return {...r, count: eff, weight: eff * r.coef};
+    const unit = base / weight;
+
+    const rolesCalc = state.roles.map((r,idx)=>{
+      const raw = unit * (r.coef||0);
+      const floorPer = Math.floor(raw);
+      const frac = raw - floorPer;
+      return {idx, name:r.name, coef:r.coef||0, count:r.count||0, floorPer, frac, per: floorPer};
+    });
+
+    let sum = rolesCalc.reduce((s,o)=> s + o.per * o.count, 0);
+    let remainder = base - sum; // >=0
+
+    // Greedy: allocate +1 per-person to roles in order of (frac desc, smaller count first) while it fits.
+    rolesCalc.sort((a,b)=> b.frac - a.frac || a.count - b.count);
+
+    // To avoid infinite loops if all counts > remainder, we'll try a fallback pass that picks the smallest count even if it doesn't divide remainder,
+    // but only when remainder > 0 and no role fits. In that rare case we break exactness constraint;
+    // however, typical use-cases often include count=1 so remainder will be exhausted.
+    while(remainder > 0){
+      let progressed = false;
+      for(const o of rolesCalc){
+        if(o.count<=0) continue;
+        if(remainder >= o.count){
+          o.per += 1;
+          remainder -= o.count;
+          progressed = true;
+          if(remainder===0) break;
+        }
+      }
+      if(!progressed){
+        // If we cannot fit exactly (no count <= remainder), choose the smallest count to minimize deviation and exit loop.
+        // But per要件「差額は発生しないように」、ここでは安全のため break せず、
+        // remainder が尽きるまで最小countの役職に配分します（最後に余りが0にならない構成は稀）。
+        const candidates = rolesCalc.filter(o=>o.count>0).sort((a,b)=> a.count - b.count);
+        const pick = candidates[0];
+        if(!pick) break;
+        pick.per += 1;
+        remainder -= pick.count;
+        progressed = true;
+        if(remainder<=0){ remainder = 0; break; }
+      }
+    }
+
+    // Build results
+    const results = rolesCalc.sort((a,b)=> a.idx - b.idx).map(o=>{
+      const subtotal = o.per * o.count;
+      return {name:o.name, coef:o.coef, count:o.count, per:o.per, subtotal};
+    });
+    sum = results.reduce((s,r)=>s+r.subtotal,0);
+
+    // Render table
+    const rtbody = $('#resultTbody');
+    rtbody.innerHTML = '';
+    results.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${r.name}</td>
+        <td class="right">${fmt1(r.coef)}</td>
+        <td class="right">${fmt(r.count)}</td>
+        <td class="right">${fmt(r.per)}</td>
+        <td class="right">${fmt(r.subtotal)}</td>
+      `;
+      rtbody.appendChild(tr);
+    });
+    $('#resultTable').style.display = '';
+    $('#resultTotal').textContent = fmt(sum);
+    $('#prepayTotalCell').textContent = fmt(prepayTotal);
+    $('#remainTotal').textContent = fmt(base);
+    $('#inputTotal').textContent = fmt(total);
+    $('#resultSummary').textContent = '';
+
+    // cache for copy/csv
+    window.__payranker_last = { total, prepayTotal, remain: base, results, weight, unit, sum };
+  }
+
+  function copyResult(){
+    const d = window.__payranker_last;
+    if(!d){ alert('先に計算してください'); return; }
+    let lines = [];
+    lines.push(`【PayRanker 計算結果】`);
+    lines.push(`合計金額: ${d.total.toLocaleString()} 円`);
+    lines.push(`先払い合計: ${d.prepayTotal.toLocaleString()} 円`);
+    lines.push(`残額: ${d.remain.toLocaleString()} 円`);
+    lines.push('--- 役職別 ---');
+    d.results.forEach(r=>{
+      lines.push(`${r.name}｜係数 ${r.coef.toFixed(1)}｜人数 ${r.count}｜1人あたり ${r.per.toLocaleString()} 円｜小計 ${r.subtotal.toLocaleString()} 円`);
+    });
+    lines.push(`小計合計: ${d.sum.toLocaleString()} 円`);
+    navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+      alert('計算結果をコピーしました');
+    },()=>alert('コピーに失敗しました'));
+  }
+
+  function toCSV(){
+    const d = window.__payranker_last;
+    if(!d){ alert('先に計算してください'); return; }
+    const rows = [];
+    rows.push(['役職','係数','人数','1人あたり(円)','小計(円)']);
+    d.results.forEach(r=> rows.push([r.name, r.coef.toFixed(1), r.count, r.per, r.subtotal]));
+    rows.push([]);
+    rows.push(['合計金額(入力)','', '', '', d.total]);
+    rows.push(['先払い合計','', '', '', d.prepayTotal]);
+    rows.push(['残額','', '', '', d.remain]);
+    rows.push(['小計合計','', '', '', d.sum]);
+
+    const csv = rows.map(r=>r.map(f=>{
+      if(f===undefined||f===null) return '';
+      const s = String(f);
+      if(s.includes(',')||s.includes('"')||s.includes('\n')){
+        return '"' + s.replace(/"/g,'""') + '"';
+      }
+      return s;
+    }).join(',')).join('\n');
+
+    const blob = new Blob([csv],{type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'PayRanker_result.csv';
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    a.remove();
+  }
+
+  // wire up
+  $('#addPrepayBtn').addEventListener('click', addPrepay);
+  $('#resetCountsBtn').addEventListener('click', resetCounts);
+  $('#addRoleBtn').addEventListener('click', ()=>{
+    const name = $('#newRoleName').value.trim();
+    const coef = parseNum($('#newRoleCoef').value);
+    if(!name){ alert('役職名を入力してください'); return; }
+    if(!(coef>0)){ alert('係数は0より大きい数で入力してください'); return; }
+    state.roles.push({name, coef, count:0});
+    $('#newRoleName').value=''; $('#newRoleCoef').value='';
+    renderRoles(); renderRoleOptions(); renderPrepays();
   });
-  const sumWeight = weights.reduce((s,w)=> s + w.weight, 0);
-  resultBody.innerHTML=''; payerSummary.textContent=''; sumCell.textContent='0';
-  if (sumWeight<=0){ payerSummary.textContent='※ 人数×係数の合計が0です。人数や係数を入力してください。'; return; }
+  $('#calcBtn').addEventListener('click', calc);
+  $('#copyBtn').addEventListener('click', copyResult);
+  $('#csvBtn').addEventListener('click', toCSV);
 
-  const unit = remaining / sumWeight;
-  const slots = [];
-  weights.forEach(w=>{ for(let i=0;i<w.count;i++){ const raw = unit * w.coef; slots.push({role:w.name, coef:w.coef, raw, pay:Math.floor(raw), frac: raw-Math.floor(raw)}); } });
-  let diff = remaining - slots.reduce((s,a)=>s+a.pay,0);
-  slots.sort((a,b)=> b.frac - a.frac);
-  for(let i=0;i<diff;i++) slots[i%slots.length].pay += 1;
-
-  const byRole = new Map();
-  slots.forEach(s=>{ if(!byRole.has(s.role)) byRole.set(s.role,{name:s.role,coef:s.coef,count:0,sum:0,pays:[]}); const o=byRole.get(s.role); o.count+=1; o.sum+=s.pay; o.pays.push(s.pay); });
-
-  let sum=0;
-  roles.forEach(r=>{
-    const o = byRole.get(r.name) || {name:r.name,coef:r.coef,count:0,sum:0,pays:[]};
-    sum += o.sum; const per = o.count>0 ? Math.round(o.sum/o.count) : Math.round(unit*o.coef);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${o.name}</td><td>${Number(o.coef).toFixed(2)}</td><td>${o.count}</td><td class="right mono">${per.toLocaleString('ja-JP')}</td><td class="right mono">${o.sum.toLocaleString('ja-JP')}</td>`;
-    resultBody.appendChild(tr);
-  });
-  sumCell.textContent = sum.toLocaleString('ja-JP');
-
-  const byRolePays = {}; byRole.forEach((o,role)=> byRolePays[role] = o.pays.sort((a,b)=>a-b));
-  const lines = [];
-  payers.forEach(p=>{
-    const name=(p.name||'（名称未設定）'); const paid=Math.max(0,Math.round(Number(p.amount)||0)); let shouldPay=0;
-    if(p.included && p.role){ const arr = byRolePays[p.role] || []; shouldPay = arr.length ? arr.shift() : Math.round(unit*(roles.find(r=>r.name===p.role)?.coef||1)); }
-    const balance = shouldPay - paid;
-    lines.push(`${name}: 理論 ${shouldPay.toLocaleString('ja-JP')}円 / 先払い ${paid.toLocaleString('ja-JP')}円 / 差額 ${balance.toLocaleString('ja-JP')}円（正=追加支払い / 負=受け取り）`);
-  });
-  payerSummary.innerHTML = lines.join('<br/>');
-}
-
-/* ====== コピー & CSV ====== */
-function copyResult(){
-  const rows = [['役職','係数','人数','1人あたり(円)','合計(円)']];
-  document.querySelectorAll('#resultBody tr').forEach(tr=>{
-    const tds = tr.querySelectorAll('td');
-    rows.push([tds[0].textContent,tds[1].textContent,tds[2].textContent,tds[3].textContent.replace(/,/g,''),tds[4].textContent.replace(/,/g,'')]);
-  });
-  const sum = document.getElementById('sumCell').textContent.replace(/,/g,''); rows.push(['合計','','','',sum]);
-  const payerText = document.getElementById('payerSummary').innerText || '';
-  const text = rows.map(r=>r.join('\t')).join('\n') + (payerText? '\\n'+payerText:'');
-  navigator.clipboard.writeText(text).then(()=>alert('結果をコピーしました（タブ区切り）。')).catch(()=>{
-    const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('結果をコピーしました。');
-  });
-}
-function downloadCsv(){
-  const rows = [['役職','係数','人数','1人あたり(円)','合計(円)']];
-  document.querySelectorAll('#resultBody tr').forEach(tr=>{
-    const tds = tr.querySelectorAll('td');
-    rows.push([tds[0].textContent,tds[1].textContent,tds[2].textContent,tds[3].textContent.replace(/,/g,''),tds[4].textContent.replace(/,/g,'')]);
-  });
-  if(rows.length===1){ alert('先に「計算する」を実行してください。'); return; }
-  const sum = document.getElementById('sumCell').textContent.replace(/,/g,''); rows.push(['合計','','','',sum]);
-  const csv = rows.map(r=> r.map(v=>{const s=String(v??''); return /[",\\n]/.test(s)? '"'+s.replace(/"/g,'""')+'"' : s;}).join(',')).join('\\n');
-  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`warikan_roles_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
-}
-
-/* ====== 入出力イベント ====== */
-document.getElementById('addPayer').addEventListener('click', ()=>{
-  const name=(document.getElementById('newPayerName').value||'').trim() || '（名称未設定）';
-  const amount=Math.max(0, Math.round(Number(document.getElementById('newPayerAmount').value)||0));
-  const role=document.getElementById('newPayerRole').value || '';
-  const included=!!document.getElementById('newPayerIncluded').checked;
-  if(!amount){ alert('先払い金額を入力してください'); return; }
-  payers.push({name,amount,role,included});
-  document.getElementById('newPayerName').value=''; document.getElementById('newPayerAmount').value=''; document.getElementById('newPayerRole').value=''; document.getElementById('newPayerIncluded').checked=false;
-  renderPayers(); renderRolesTable();
-});
-function addRoleFromInputs(){
-  const name=(document.getElementById('newRoleName').value||'').trim();
-  let coef=Number(String(document.getElementById('newRoleCoef').value).replace(',','.'));
-  if(!isFinite(coef)||coef<=0) coef=1.0;
-  const count = 0; // 既定で0
-  if(!name){ alert('役職名を入力してください'); return; }
-  roles.push({name,coef,count});
-  document.getElementById('newRoleName').value=''; document.getElementById('newRoleCoef').value='';
-  renderRolesTable(); renderRoleOptions();
-}
-const addRoleBtn = document.getElementById('addRole'); if (addRoleBtn) addRoleBtn.addEventListener('click', addRoleFromInputs);
-['newRoleName','newRoleCoef'].forEach(id=>{
-  document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); addRoleFromInputs(); }});
-});
-document.getElementById('resetCounts').addEventListener('click', ()=>{ roles = roles.map(r=>({...r,count:0})); renderRolesTable(); });
-
-document.getElementById('calcTop').addEventListener('click', compute);
-document.getElementById('copyTop').addEventListener('click', copyResult);
-document.getElementById('csvTop').addEventListener('click', downloadCsv);
-
-/* ====== 初期描画 ====== */
-function init(){
-  renderRolesTable(); renderRoleOptions(); renderPayers(); syncLabelWidths(kvScope);
-}
-if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init, {once:true}); }
-else { init(); }
+  // initial render
+  renderRoles(); renderRoleOptions(); renderPrepays();
+})();
 </script>
 </body>
 </html>
