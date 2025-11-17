@@ -4,8 +4,27 @@
   <meta charset="utf-8" />
   <meta name="google-site-verification" content="O1bAQdkNM-LtN_OsPnrdcI69nba96LJGcVoFLuRCj7U" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- SEO: タイトル & 説明文に「ペイランカー」「割り勘」を含める -->
+  <title>PayRanker（ペイランカー） - 役職別の割り勘計算ツール</title>
+  <meta name="description" content="PayRanker（ペイランカー）は、飲み会や懇親会の割り勘を、役職や年齢、お酒の有無などの属性ごとに自動で計算できる無料のWebツールです。合計金額と人数を入力するだけで、公平な割り勘金額を算出します。" />
+
+  <!-- 構造化データ：サイト名と別名（ペイランカー／ペイ ランカー）を検索エンジンに伝える -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://payranker.jp/",
+    "name": "PayRanker",
+    "alternateName": [
+      "ペイランカー",
+      "ペイ ランカー",
+      "Pay Ranker"
+    ]
+  }
+  </script>
+
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4602661648095859" crossorigin="anonymous"></script>
-  <title>PayRanker</title>
   <style>
     :root{
       --bg:#f7f7fb;
@@ -163,9 +182,14 @@
 <body>
   <div class="container" id="app">
     <header class="section">
-      <h1 style="margin:0 0 8px 0;">PayRanker</h1>
-      <p class="lead">PayRankerは、年齢や役職、学年、はたまたお酒の有無など立場や状況に応じた負担額を自動計算</p>
-      <p class="note80">※本サービスは計算補助を目的としています。最終的な精算額は関係者間でご確認ください。個人情報（フルネームなど）の入力は控えてください。</p>
+      <!-- H1 にカタカナ表記を追加 -->
+      <h1 style="margin:0 0 8px 0;">PayRanker（ペイランカー）</h1>
+      <!-- リード文に「ペイランカー」と「割り勘」を自然に含める -->
+      <p class="lead">
+        PayRanker（ペイランカー）は、年齢や役職、学年、お酒の有無などの属性に応じて、
+        公平な割り勘の負担額を自動計算できるWebツールです。
+      </p>
+      <p class="note80">※本サービスは割り勘の計算補助を目的としています。最終的な精算額は関係者間でご確認ください。個人情報（フルネームなど）の入力は控えてください。</p>
     </header>
 
     <!-- 合計金額 -->
@@ -307,7 +331,7 @@
     </section>
 
     <footer class="section small" style="text-align:center;color:#6b7280">
-      &copy; 2025 PayRanker. This is a calculation assistance tool. Do not enter personal information.
+      &copy; 2025 PayRanker（ペイランカー）. This is a split-bill (割り勘) calculation assistance tool. Do not enter personal information.
     </footer>
   </div>
 
@@ -649,7 +673,8 @@
     const d = window.__payranker_last;
     if(!d){ alert('先に計算してください'); return; }
     let lines = [];
-    lines.push(`【PayRanker 計算結果】`);
+    // ここに「割り勘」「ペイランカー」を含める
+    lines.push(`【PayRanker（ペイランカー）割り勘計算結果】`);
     lines.push(`合計金額: ${d.total.toLocaleString()} 円`);
     lines.push(`先払い合計: ${d.prepayTotal.toLocaleString()} 円`);
     lines.push(`残額: ${d.remain.toLocaleString()} 円`);
